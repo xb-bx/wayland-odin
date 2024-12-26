@@ -96,6 +96,37 @@ wl_proxy :: struct {
     queue_link: wl_list,
 };
 
+// struct wl_display {
+// 	struct wl_proxy proxy;
+// 	struct wl_connection *connection;
+
+// 	/* errno of the last wl_display error */
+// 	int last_error;
+
+// 	/* When display gets an error event from some object, it stores
+// 	 * information about it here, so that client can get this
+// 	 * information afterwards */
+// 	struct {
+// 		/* Code of the error. It can be compared to
+// 		 * the interface's errors enumeration. */
+// 		uint32_t code;
+// 		/* interface (protocol) in which the error occurred */
+// 		const struct wl_interface *interface;
+// 		/* id of the proxy that caused the error. There's no warranty
+// 		 * that the proxy is still valid. It's up to client how it will
+// 		 * use it */
+// 		uint32_t id;
+// 	} protocol_error;
+// 	int fd;
+// 	struct wl_map objects;
+// 	struct wl_event_queue display_queue;
+// 	struct wl_event_queue default_queue;
+// 	pthread_mutex_t mutex;
+
+// 	int reader_count;
+// 	uint32_t read_serial;
+// 	pthread_cond_t reader_cond;
+// };
 wl_display :: struct {
     proxy: wl_proxy,
     last_error: int
