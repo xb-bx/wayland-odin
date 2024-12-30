@@ -1,6 +1,7 @@
 package main
 
 import "core:fmt"
+import "core:c"
 
 
 // static inline struct wl_registry *
@@ -15,12 +16,20 @@ import "core:fmt"
 // }
 
 foreign import lib "system:wayland-client"
+foreign import lib_protocols "system:wayland-protocols"
 
 
 wl_list :: struct {
     prev: ^wl_list,
     next: ^wl_list
 }
+
+wl_event_queue :: {
+    event_list wl_list, 
+    proxy_list: proxy_list, /**< struct wl_proxy::queue_link */
+    display: ^wl_display,
+    name: cstring
+};
 
 // struct wl_message {
 // 	/** Message name */
@@ -52,10 +61,10 @@ wl_message :: struct {
 // };
 wl_interface :: struct {
     name: cstring,
-    version: int,
-    method_count: int,
+    version: c.int,
+    method_count: c.int,
     methods: ^wl_message,
-    event_count: int,
+    event_count: c.int,
     events: ^wl_message
 }
 
@@ -67,7 +76,7 @@ wl_interface :: struct {
 wl_object :: struct {
     interface: ^wl_interface,
     implementation: u64,
-    id: u32
+    id: c.uint32_t
 }
 
 // struct wl_proxy {
@@ -87,13 +96,40 @@ wl_proxy :: struct {
     object: wl_object,
     display: ^wl_display,
     queue: u64, // pointer to wl_event_queue
-    flags: u32,
-    refcount: int,
+    flags: c.uint32_t,
+    refcount: c.int,
     user_data: u64, // void* pointer
     dispatcher: u64, // wl_dispatcher_func_t dispatcher;
-    version: u32,
+    version: c.uint32_t,
     tag: cstring,
     queue_link: wl_list,
+};
+
+// struct wl_ring_buffer {
+// 	char *data;
+// 	size_t head, tail;
+// 	uint32_t size_bits;
+// 	uint32_t max_size_bits;  /* 0 for unlimited */
+// };
+
+wl_ring_buffer :: struct {
+    data: cstring,
+    head: c.size_t,
+    tail: c.size_t,
+    size_bits: c.uint32_t,
+    max_size_bits: c.uint32_t
+}
+
+MAX_FDS_OUT	:: 28
+// #define CLEN		(CMSG_LEN(MAX_FDS_OUT * sizeof(int32_t)))
+
+wl_connection :: struct {
+    _in: wl_ring_buffer,
+    out: wl_ring_buffer,
+    fds_in: wl_ring_buffer,
+    fds_out: wl_ring_buffer,
+    fd: c.int,
+    want_flush: c.int,
 };
 
 // struct wl_display {
@@ -127,22 +163,42 @@ wl_proxy :: struct {
 // 	uint32_t read_serial;
 // 	pthread_cond_t reader_cond;
 // };
+
 wl_display :: struct {
     proxy: wl_proxy,
-    last_error: int
+    connection: ^wl_connection,
+    last_error: c.int,
+    protocol_error: _wl_protocol_error,
+    fd: c.int
+}
+_wl_protocol_error :: struct {
+    code: c.uint32_t,
+    interface: ^wl_interface,
+    id: c.uint32_t
 }
 
 wl_registry :: struct {}
 
+static inline struct wl_registry *
+wl_display_get_registry :: proc(^wl_display) -> ^wl_registry
+{
+	struct wl_proxy *registry;
+
+	registry = wl_proxy_marshal_flags((struct wl_proxy *) wl_display,
+			 WL_DISPLAY_GET_REGISTRY, &wl_registry_interface, wl_proxy_get_version((struct wl_proxy *) wl_display), 0, NULL);
+
+	return (struct wl_registry *) registry;
+}
+
 @(default_calling_convention="c")
 foreign lib {
     wl_display_connect :: proc(cstring) -> ^wl_display ---
-    wl_display_get_registry :: proc(^wl_display) -> ^wl_registry ---
+    wl_proxy_marshal_flags :: proc(^wl_display) -> ^wl_registry ---
 }
 
 main::proc() {
     display := wl_display_connect(nil);
-    // registry := wl_display_get_registry(display);
+    registry := wl_display_get_registry(display);
 
     fmt.println(display);
 
