@@ -16,7 +16,7 @@ import "core:c"
 // }
 
 foreign import lib "system:wayland-client"
-foreign import lib_protocols "system:wayland-protocols"
+foreign import public "wayland-public.o"
 
 
 wl_list :: struct {
@@ -24,12 +24,12 @@ wl_list :: struct {
     next: ^wl_list
 }
 
-wl_event_queue :: {
-    event_list wl_list, 
-    proxy_list: proxy_list, /**< struct wl_proxy::queue_link */
+wl_event_queue :: struct {
+    event_list: wl_list, 
+    proxy_list: wl_list, 
     display: ^wl_display,
     name: cstring
-};
+}
 
 // struct wl_message {
 // 	/** Message name */
@@ -179,21 +179,26 @@ _wl_protocol_error :: struct {
 
 wl_registry :: struct {}
 
-static inline struct wl_registry *
-wl_display_get_registry :: proc(^wl_display) -> ^wl_registry
-{
-	struct wl_proxy *registry;
-
-	registry = wl_proxy_marshal_flags((struct wl_proxy *) wl_display,
-			 WL_DISPLAY_GET_REGISTRY, &wl_registry_interface, wl_proxy_get_version((struct wl_proxy *) wl_display), 0, NULL);
-
-	return (struct wl_registry *) registry;
-}
+//static inline struct wl_registry *
+//wl_display_get_registry :: proc(^wl_display) -> ^wl_registry
+//{
+//	struct wl_proxy *registry;
+//
+//	registry = wl_proxy_marshal_flags((struct wl_proxy *) wl_display,
+//			 WL_DISPLAY_GET_REGISTRY, &wl_registry_interface, wl_proxy_get_version((struct wl_proxy *) wl_display), 0, NULL);
+//
+//	return (struct wl_registry *) registry;
+//}
 
 @(default_calling_convention="c")
 foreign lib {
     wl_display_connect :: proc(cstring) -> ^wl_display ---
     wl_proxy_marshal_flags :: proc(^wl_display) -> ^wl_registry ---
+}
+
+@(default_calling_convention="c")
+foreign public {
+    wl_display_get_registry :: proc(^wl_display) -> ^wl_registry ---
 }
 
 main::proc() {
