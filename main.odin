@@ -4,19 +4,8 @@ import "core:fmt"
 import "core:c"
 
 
-// static inline struct wl_registry *
-// wl_display_get_registry(struct wl_display *wl_display)
-// {
-// 	struct wl_proxy *registry;
-
-// 	registry = wl_proxy_marshal_flags((struct wl_proxy *) wl_display,
-// 			 WL_DISPLAY_GET_REGISTRY, &wl_registry_interface, wl_proxy_get_version((struct wl_proxy *) wl_display), 0, NULL);
-
-// 	return (struct wl_registry *) registry;
-// }
-
 foreign import lib "system:wayland-client"
-foreign import public "wayland-public.o"
+// foreign import public "wayland-public.o"
 
 
 wl_list :: struct {
@@ -45,20 +34,7 @@ wl_message :: struct {
     types: ^^wl_interface
 
 }
-// struct wl_interface {
-// 	/** Interface name */
-// 	const char *name;
-// 	/** Interface version */
-// 	int version;
-// 	/** Number of methods (requests) */
-// 	int method_count;
-// 	/** Method (request) signatures */
-// 	const struct wl_message *methods;
-// 	/** Number of events */
-// 	int event_count;
-// 	/** Event signatures */
-// 	const struct wl_message *events;
-// };
+
 wl_interface :: struct {
     name: cstring,
     version: c.int,
@@ -68,14 +44,10 @@ wl_interface :: struct {
     events: ^wl_message
 }
 
-// struct wl_object {
-// 	const struct wl_interface *interface;
-// 	const void *implementation;
-// 	uint32_t id;
-// };
+Implementation :: #type proc "c" () -> ()
 wl_object :: struct {
     interface: ^wl_interface,
-    implementation: u64,
+    implementation: ^Implementation,
     id: c.uint32_t
 }
 
@@ -104,13 +76,6 @@ wl_proxy :: struct {
     tag: cstring,
     queue_link: wl_list,
 };
-
-// struct wl_ring_buffer {
-// 	char *data;
-// 	size_t head, tail;
-// 	uint32_t size_bits;
-// 	uint32_t max_size_bits;  /* 0 for unlimited */
-// };
 
 wl_ring_buffer :: struct {
     data: cstring,
@@ -179,32 +144,71 @@ _wl_protocol_error :: struct {
 
 wl_registry :: struct {}
 
-//static inline struct wl_registry *
-//wl_display_get_registry :: proc(^wl_display) -> ^wl_registry
-//{
-//	struct wl_proxy *registry;
-//
-//	registry = wl_proxy_marshal_flags((struct wl_proxy *) wl_display,
-//			 WL_DISPLAY_GET_REGISTRY, &wl_registry_interface, wl_proxy_get_version((struct wl_proxy *) wl_display), 0, NULL);
-//
-//	return (struct wl_registry *) registry;
-//}
+wl_registry_listener :: struct {
+    global: proc(rawptr, ^wl_registry, c.uint32_t, cstring, c.uint32_t),
+    global_remove: proc(rawptr, ^wl_registry, c.uint32_t)
+};
+
 
 @(default_calling_convention="c")
 foreign lib {
     wl_display_connect :: proc(cstring) -> ^wl_display ---
-    wl_proxy_marshal_flags :: proc(^wl_display) -> ^wl_registry ---
+    wl_proxy_marshal_flags :: proc(^wl_proxy, c.uint32_t, ^wl_interface, c.uint32_t, c.uint32_t, #c_vararg ..any) -> ^wl_proxy ---
+    wl_proxy_get_version :: proc(^wl_proxy) -> c.uint32_t --- 
+    wl_display_roundtrip :: proc(^wl_display) -> c.int --- 
+    wl_proxy_add_listener:: proc(^wl_proxy, ^Implementation, rawptr) -> c.int ---
+    wl_registry_interface: wl_interface
 }
 
-@(default_calling_convention="c")
-foreign public {
-    wl_display_get_registry :: proc(^wl_display) -> ^wl_registry ---
+WL_DISPLAY_GET_REGISTRY :: 1
+
+wl_display_get_registry :: proc (display: ^wl_display) -> ^wl_registry
+{
+     registry: ^wl_proxy = wl_proxy_marshal_flags(
+                  cast(^wl_proxy)display, 
+                  WL_DISPLAY_GET_REGISTRY, 
+                  &wl_registry_interface, 
+                  wl_proxy_get_version(cast(^wl_proxy)display), 
+                  0, nil
+                  );
+    return auto_cast registry;
+}
+// static inline int
+// wl_registry_add_listener(struct wl_registry *wl_registry,
+// 			 const struct wl_registry_listener *listener, void *data)
+// {
+// 	return wl_proxy_add_listener((struct wl_proxy *) wl_registry,
+// 				     (void (**)(void)) listener, data);
+// }
+
+wl_registry_add_listener :: proc (wl_registry: ^wl_registry, listener: ^wl_registry_listener, data: rawptr) -> c.int {
+
+    return wl_proxy_add_listener(cast(^wl_proxy)wl_registry, auto_cast listener, data); 
+}
+
+
+global :: proc(data: rawptr , registry: ^wl_registry, name: c.uint32_t, interface: cstring, version: c.uint32_t) {
+    fmt.println(interface);
+}
+global_remove :: proc(data: rawptr , registry: ^wl_registry, name: c.uint32_t) {
 }
 
 main::proc() {
     display := wl_display_connect(nil);
+    fmt.println(display);
+
     registry := wl_display_get_registry(display);
 
     fmt.println(display);
+    fmt.println(registry);
 
+
+    listener := wl_registry_listener {
+        global= global,
+        global_remove= global_remove
+    };
+    wl_registry_add_listener(registry, &listener, nil);
+
+    x := wl_display_roundtrip(display);
+    fmt.println(x);
 }
