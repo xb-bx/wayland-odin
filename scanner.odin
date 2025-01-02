@@ -15,9 +15,15 @@ Event :: struct {
 	args: [dynamic]Arg,
 }
 
+Request :: struct {
+	name: string,
+	args: [dynamic]Arg,
+}
+
 Interface :: struct {
 	name:   string,
 	events: [dynamic]Event,
+	requests: [dynamic]Request,
 }
 
 type_map := map[string]string{
@@ -33,7 +39,7 @@ type_map := map[string]string{
 
 process_event :: proc(doc: ^xml.Document, interface: ^Interface, index: u32) -> Event{
 	event_name, _ := xml.find_attribute_val_by_key(doc, index, "name")
-	fmt.println("Event", event_name)
+	//fmt.println("Event", event_name)
 	el := doc.elements[index]
     event :=  Event{ name= event_name};
 
@@ -54,6 +60,30 @@ process_event :: proc(doc: ^xml.Document, interface: ^Interface, index: u32) -> 
     return event;
 }
 
+process_request :: proc(doc: ^xml.Document, interface: ^Interface, index: u32) -> Request{
+	request_name, _ := xml.find_attribute_val_by_key(doc, index, "name")
+	//fmt.println("Request", request_name)
+	el := doc.elements[index]
+    request :=  Request{ name= request_name};
+
+	for val in el.value {
+		el := doc.elements[val.(u32)]
+
+		if el.ident == "arg" {
+			arg_name, _ := xml.find_attribute_val_by_key(doc, val.(u32), "name")
+			arg_type, _ := xml.find_attribute_val_by_key(doc, val.(u32), "type")
+
+            arg_interface: string = ""
+            if arg_type == "object" {
+			    arg_interface, _ = xml.find_attribute_val_by_key(doc, val.(u32), "interface")
+            }
+            append(&request.args, Arg{ name = arg_name, type = arg_type, interface = arg_interface})
+		}
+	}
+    return request;
+}
+
+
 process_interface :: proc(doc: ^xml.Document, el: xml.Element) -> Interface {
 	interface := Interface{}
 
@@ -68,6 +98,9 @@ process_interface :: proc(doc: ^xml.Document, el: xml.Element) -> Interface {
 		if el.ident == "event" {
 			append(&interface.events, process_event(doc, &interface, val.(u32)))
 		}
+		if el.ident == "request" {
+			append(&interface.requests, process_request(doc, &interface, val.(u32)))
+		}
 	}
 
     return interface
@@ -80,11 +113,16 @@ gen_interface_code :: proc(out: os.Handle, interface: Interface) {
 
     fmt.fprintf(out, "%s_listener :: struct {{\n", interface.name);
 
+    // Generate listener code based on interface event
     for event in interface.events {
+        // Start proc definition
         fmt.fprintf(out, "\t%s: proc(\n", event.name);
+
+        // Add default arg of user data and interface pointer
         fmt.fprintf(out, "\t\tdata: rawptr,\n");
         fmt.fprintf(out, "\t\t%s: ^%s,\n", interface.name, interface.name);
 
+        // Add spec args
         for arg in event.args {
             if arg.type == "object" && arg.interface != "" {
                 fmt.fprintf(out, "\t\t%s: ^%s,\n", arg.name, arg.interface);
@@ -99,8 +137,48 @@ gen_interface_code :: proc(out: os.Handle, interface: Interface) {
         }
         fmt.fprintf(out, "\t),\n");
     }
-
+    // Close proc declaration
     fmt.fprintf(out, "}}\n\n");
+
+    // Generate *_add_listener proc for each interface
+    template := `%s_add_listener :: proc(
+    %s: ^%s,
+    listener: ^%s_listener,
+    data: rawptr,
+) -> c.int {{
+
+    return proxy_add_listener(cast(^wl_proxy)%s, auto_cast listener, data)
+}};
+
+`
+    fmt.fprintf(out, template, interface.name, interface.name, interface.name, interface.name, interface.name)
+
+    // Generate requests code on interface requests
+    for request in interface.requests {
+        fmt.println(request);
+        //// start proc definition
+        //fmt.fprintf(out, "\t%s: proc(\n", event.name);
+        //
+        //// Add default arg of user data and interface pointer
+        //fmt.fprintf(out, "\t\tdata: rawptr,\n");
+        //fmt.fprintf(out, "\t\t%s: ^%s,\n", interface.name, interface.name);
+        //
+        //// Add spec args
+        //for arg in event.args {
+        //    if arg.type == "object" && arg.interface != "" {
+        //        fmt.fprintf(out, "\t\t%s: ^%s,\n", arg.name, arg.interface);
+        //    }
+        //    else {
+        //        translated_type, ok := type_map[arg.type]
+        //        if !ok {
+        //            panic(fmt.tprintf("Unsuported type: interfacer '%s', event '%s', arg_name %s, type '%s'", interface.name, event.name, arg.name, arg.type))
+        //        }
+        //        fmt.fprintf(out, "\t\t%s: %s,\n", arg.name, translated_type);
+        //    }
+        //}
+        //fmt.fprintf(out, "\t),\n");
+    }
+
 }
 
 // Prolly should use a string builder
