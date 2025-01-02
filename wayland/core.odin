@@ -14,6 +14,21 @@ foreign lib {
 	wl_registry_interface: wl_interface
 }
 
+//struct wl_array {
+//	/** Array size */
+//	size_t size;
+//	/** Allocated space */
+//	size_t alloc;
+//	/** Array data */
+//	void *data;
+//};
+
+wl_array :: struct {
+    size: c.size_t,
+    alloc: c.size_t,
+    data: rawptr
+}
+
 wl_list :: struct {
 	prev: ^wl_list,
 	next: ^wl_list,

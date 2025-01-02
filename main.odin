@@ -6,10 +6,10 @@ import wl "wayland"
 
 WL_DISPLAY_GET_REGISTRY :: 1
 
-wl_registry_listener :: struct {
-	global:        proc(_: rawptr, _: ^wl.wl_registry, _: c.uint32_t, _: cstring, _: c.uint32_t),
-	global_remove: proc(_: rawptr, _: ^wl.wl_registry, _: c.uint32_t),
-}
+//wl_registry_listener :: struct {
+//	global:        proc(_: rawptr, _: ^wl.wl_registry, _: c.uint32_t, _: cstring, _: c.uint32_t),
+//	global_remove: proc(_: rawptr, _: ^wl.wl_registry, _: c.uint32_t),
+//}
 
 wl_display_get_registry :: proc(display: ^wl.wl_display) -> ^wl.wl_registry {
 	registry: ^wl.wl_proxy = wl.proxy_marshal_flags(
@@ -25,7 +25,7 @@ wl_display_get_registry :: proc(display: ^wl.wl_display) -> ^wl.wl_registry {
 
 wl_registry_add_listener :: proc(
 	wl_registry: ^wl.wl_registry,
-	listener: ^wl_registry_listener,
+	listener: ^wl.wl_registry_listener,
 	data: rawptr,
 ) -> c.int {
 
@@ -56,7 +56,7 @@ main :: proc() {
 	fmt.println(registry)
 
 
-	listener := wl_registry_listener {
+	listener := wl.wl_registry_listener {
 		global        = global,
 		global_remove = global_remove,
 	}
