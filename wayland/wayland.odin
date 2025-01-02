@@ -1,6 +1,5 @@
 package wayland
 
-wl_display :: struct {}
 wl_registry :: struct {}
 wl_callback :: struct {}
 wl_compositor :: struct {}
