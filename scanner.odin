@@ -109,8 +109,8 @@ main :: proc() {
 
     interfaces: [dynamic]Interface;
 
-	fmt.fprintln(out, "package wayland\n\n")
-	fmt.fprintln(out, "import \"core:c\"\n\n")
+	fmt.fprintln(out, "package wayland\n")
+	fmt.fprintln(out, "import \"core:c\"\n")
 
 	doc, err := xml.load_from_file("wayland.xml")
 
