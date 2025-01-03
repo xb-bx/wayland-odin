@@ -6,12 +6,18 @@ foreign import lib "system:wayland-client"
 
 @(default_calling_convention = "c")
 foreign lib {
-	@(link_name="wl_display_connect") display_connect :: proc(_: cstring) -> ^wl_display ---
-	@(link_name="wl_proxy_marshal_flags") proxy_marshal_flags :: proc(_: ^wl_proxy, _: c.uint32_t, _: ^wl_interface, _: c.uint32_t, _: c.uint32_t, #c_vararg _: ..any) -> ^wl_proxy ---
-	@(link_name="wl_proxy_get_version") proxy_get_version :: proc(_: ^wl_proxy) -> c.uint32_t ---
-	@(link_name="wl_display_roundtrip") display_roundtrip :: proc(_: ^wl_display) -> c.int ---
-	@(link_name="wl_proxy_add_listener") proxy_add_listener :: proc(_: ^wl_proxy, _: ^Implementation, _: rawptr) -> c.int ---
-	wl_registry_interface: wl_interface
+	@(link_name = "wl_display_connect")
+	display_connect :: proc(_: cstring) -> ^wl_display ---
+	@(link_name = "wl_proxy_marshal_flags")
+	proxy_marshal_flags :: proc(_: ^wl_proxy, _: c.uint32_t, _: ^wl_interface, _: c.uint32_t, _: c.uint32_t, #c_vararg _: ..any) -> ^wl_proxy ---
+	@(link_name = "wl_proxy_get_version")
+	proxy_get_version :: proc(_: ^wl_proxy) -> c.uint32_t ---
+	@(link_name = "wl_display_roundtrip")
+	display_roundtrip :: proc(_: ^wl_display) -> c.int ---
+	@(link_name = "wl_proxy_add_listener")
+	proxy_add_listener :: proc(_: ^wl_proxy, _: ^Implementation, _: rawptr) -> c.int ---
+
+	// wl_registry_interface: wl_interface
 }
 
 //struct wl_array {
@@ -23,10 +29,11 @@ foreign lib {
 //	void *data;
 //};
 
+wl_fixed_t :: c.int32_t
 wl_array :: struct {
-    size: c.size_t,
-    alloc: c.size_t,
-    data: rawptr
+	size:  c.size_t,
+	alloc: c.size_t,
+	data:  rawptr,
 }
 
 wl_list :: struct {
@@ -161,3 +168,5 @@ _wl_protocol_error :: struct {
 	interface: ^wl_interface,
 	id:        c.uint32_t,
 }
+
+WL_MARSHAL_FLAG_DESTROY :: 1 // Originally is (1 << 0) for some god forsaken reason
