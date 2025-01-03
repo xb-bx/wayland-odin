@@ -199,6 +199,8 @@ emit_listeners :: proc(out: os.Handle, interface: Interface) {
 }};
 
 `
+
+
 	fmt.fprintf(
 		out,
 		template,
@@ -363,7 +365,6 @@ emit_args_string :: proc(out: os.Handle, args: [dynamic]Arg) {
 emit_events_message :: proc(out: os.Handle, event: Event) {
 	fmt.fprintf(out, "\t{{ \"%s\", \"", event.name)
 	emit_args_string(out, event.args)
-	fmt.println(event.args)
 	fmt.fprintf(out, "\", nil }},\n")
 }
 
@@ -382,7 +383,7 @@ emit_private_code :: proc(out: os.Handle, interface: Interface) {
 	fmt.fprintf(out, "\t%d,\n", len(interface.requests))
 	fmt.fprintf(out, "\t{{}},\n")
 	fmt.fprintf(out, "\t%d,\n", len(interface.events))
-	fmt.fprintf(out, "\t&%s_events[0],\n", interface.name)
+	fmt.fprintf(out, "\t&%s_events[0],\n", interface.name) // Emit pointer to first event, as the original code has struct wl_message *events
 	fmt.fprintf(out, "}}\n\n")
 }
 
