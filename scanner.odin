@@ -3,6 +3,7 @@ package main
 import "core:encoding/xml"
 import "core:fmt"
 import "core:os"
+import "core:strings"
 
 Arg :: struct {
 	name:      string,
@@ -333,38 +334,42 @@ emit_request_stubs :: proc(out: os.Handle, interface: Interface) {
 	}
 }
 
-emit_args_string :: proc(out: os.Handle, args: [dynamic]Arg) {
+emit_args_string :: proc(args: [dynamic]Arg) -> string {
+	res: string = ""
+
 	for arg in args {
+		c: string = ""
 		// if (is_nullable_type(a) && a->nullable)
 		//     printf("?");
 
 		switch (arg.type) {
 		case "int":
-			fmt.fprintf(out, "i")
+			c = "i"
 		case "new_id":
 			if (arg.interface == "") {
-				fmt.fprintf(out, "su")
+				c = "su"
 			}
-			fmt.fprintf(out, "n")
-		case "unsigned":
-			fmt.fprintf(out, "u")
+		case "uint":
+			c = "u"
 		case "fixed":
-			fmt.fprintf(out, "f")
+			c = "f"
 		case "string":
-			fmt.fprintf(out, "s")
+			c = "s"
 		case "object":
-			fmt.fprintf(out, "o")
+			c = "o"
 		case "array":
-			fmt.fprintf(out, "a")
+			c = "a"
 		case "fd":
-			fmt.fprintf(out, "h")
+			c = "h"
 		}
+		res = strings.concatenate({res, c})
 	}
+	return res
 }
 
 emit_events_message :: proc(out: os.Handle, event: Event) {
 	fmt.fprintf(out, "\t{{ \"%s\", \"", event.name)
-	emit_args_string(out, event.args)
+	fmt.fprintf(out, "%s", emit_args_string(event.args))
 	fmt.fprintf(out, "\", nil }},\n")
 }
 
