@@ -16,8 +16,6 @@ foreign lib {
 	display_roundtrip :: proc(_: ^wl_display) -> c.int ---
 	@(link_name = "wl_proxy_add_listener")
 	proxy_add_listener :: proc(_: ^wl_proxy, _: ^Implementation, _: rawptr) -> c.int ---
-
-	// wl_registry_interface: wl_interface
 }
 
 //struct wl_array {
@@ -60,7 +58,7 @@ wl_event_queue :: struct {
 wl_message :: struct {
 	name:      cstring,
 	signature: cstring,
-	types:     ^^wl_interface,
+	types:     []^wl_interface,
 }
 
 wl_interface :: struct {
@@ -73,6 +71,7 @@ wl_interface :: struct {
 }
 
 
+// what?
 Implementation :: #type proc "c" ()
 
 wl_object :: struct {

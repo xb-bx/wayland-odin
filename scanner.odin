@@ -434,9 +434,17 @@ emit_private_code :: proc(out: os.Handle, interface: Interface) {
 	fmt.fprintf(out, "\t\"%s\",\n", interface.name)
 	fmt.fprintf(out, "\t%s,\n", interface.version)
 	fmt.fprintf(out, "\t%d,\n", len(interface.requests))
-	fmt.fprintf(out, "\t&%s_requests[0],\n", interface.name)
+	if len(interface.requests) > 0 {
+		fmt.fprintf(out, "\t&%s_requests[0],\n", interface.name)
+	} else {
+		fmt.fprintf(out, "\tnil,\n")
+	}
 	fmt.fprintf(out, "\t%d,\n", len(interface.events))
-	fmt.fprintf(out, "\t&%s_events[0],\n", interface.name) // Emit pointer to first event, as the original code has struct wl_message *events
+	if len(interface.events) > 0 {
+		fmt.fprintf(out, "\t&%s_events[0],\n", interface.name)
+	} else {
+		fmt.fprintf(out, "\tnil,\n")
+	}
 	fmt.fprintf(out, "}}\n\n")
 }
 
