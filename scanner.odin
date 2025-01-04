@@ -9,6 +9,7 @@ Arg :: struct {
 	name:      string,
 	type:      string,
 	interface: string,
+	nullable:  bool,
 }
 
 Event :: struct {
@@ -66,9 +67,19 @@ process_event :: proc(doc: ^xml.Document, interface: ^Interface, index: u32) -> 
 		if el.ident == "arg" {
 			arg_name, _ := xml.find_attribute_val_by_key(doc, val.(u32), "name")
 			arg_type, _ := xml.find_attribute_val_by_key(doc, val.(u32), "type")
-
+			arg_nullable, _ := xml.find_attribute_val_by_key(doc, val.(u32), "allow-null")
 			arg_interface, _ := xml.find_attribute_val_by_key(doc, val.(u32), "interface")
-			append(&event.args, Arg{name = arg_name, type = arg_type, interface = arg_interface})
+
+			nullable := arg_nullable == "true" ? true : false
+			append(
+				&event.args,
+				Arg {
+					name = arg_name,
+					type = arg_type,
+					interface = arg_interface,
+					nullable = nullable,
+				},
+			)
 		}
 	}
 	return event
@@ -96,13 +107,23 @@ process_request :: proc(
 		if el.ident == "arg" {
 			arg_name, _ := xml.find_attribute_val_by_key(doc, val.(u32), "name")
 			arg_type, _ := xml.find_attribute_val_by_key(doc, val.(u32), "type")
+			arg_nullable, _ := xml.find_attribute_val_by_key(doc, val.(u32), "allow-null")
+			nullable := arg_nullable == "true" ? true : false
 
 			if arg_type == "new_id" {
 				num_new_ids += 1
 			}
 
 			arg_interface, _ := xml.find_attribute_val_by_key(doc, val.(u32), "interface")
-			append(&request.args, Arg{name = arg_name, type = arg_type, interface = arg_interface})
+			append(
+				&request.args,
+				Arg {
+					name = arg_name,
+					type = arg_type,
+					interface = arg_interface,
+					nullable = nullable,
+				},
+			)
 		}
 	}
 	request.num_new_ids = num_new_ids
@@ -339,8 +360,10 @@ emit_args_string :: proc(args: [dynamic]Arg) -> string {
 
 	for arg in args {
 		c: string = ""
-		// if (is_nullable_type(a) && a->nullable)
-		//     printf("?");
+		// Just check if it is indeed a nullable type
+		if (arg.type == "object" || arg.type == "string") && arg.nullable {
+			res = strings.concatenate({res, "?"})
+		}
 
 		switch (arg.type) {
 		case "int":
