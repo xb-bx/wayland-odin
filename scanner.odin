@@ -369,9 +369,7 @@ emit_args_string :: proc(args: [dynamic]Arg) -> string {
 		case "int":
 			c = "i"
 		case "new_id":
-			if (arg.interface == "") {
-				c = "su"
-			}
+			c = arg.interface == "" ? "sun" : "n"
 		case "uint":
 			c = "u"
 		case "fixed":
@@ -390,6 +388,26 @@ emit_args_string :: proc(args: [dynamic]Arg) -> string {
 	return res
 }
 
+emit_requests_message :: proc(out: os.Handle, request: Request) {
+	ret: ^Arg = nil
+
+	type_arr: [dynamic]string = {}
+
+	// Generate type interfaces
+	for arg in request.args {
+		if arg.interface != "" {
+			append(&type_arr, fmt.tprintf("&%s_interface", arg.interface))
+		} else {
+			append(&type_arr, fmt.tprintf("nil"))
+		}
+	}
+
+
+	fmt.fprintf(out, "\t{{ \"%s\", \"", request.name)
+	fmt.fprintf(out, "%s", emit_args_string(request.args))
+	fmt.fprintf(out, "\", {{%s}} }},\n", strings.join(type_arr[:], ", "))
+}
+
 emit_events_message :: proc(out: os.Handle, event: Event) {
 	fmt.fprintf(out, "\t{{ \"%s\", \"", event.name)
 	fmt.fprintf(out, "%s", emit_args_string(event.args))
@@ -397,6 +415,13 @@ emit_events_message :: proc(out: os.Handle, event: Event) {
 }
 
 emit_private_code :: proc(out: os.Handle, interface: Interface) {
+	// Requests struct
+	fmt.fprintf(out, "%s_requests: []wl_message = []wl_message{{\n", interface.name)
+	for request in interface.requests {
+		emit_requests_message(out, request)
+	}
+	fmt.fprintf(out, "}}\n\n")
+
 	// Events struct
 	fmt.fprintf(out, "%s_events: []wl_message = []wl_message{{\n", interface.name)
 	for event in interface.events {
@@ -409,7 +434,7 @@ emit_private_code :: proc(out: os.Handle, interface: Interface) {
 	fmt.fprintf(out, "\t\"%s\",\n", interface.name)
 	fmt.fprintf(out, "\t%s,\n", interface.version)
 	fmt.fprintf(out, "\t%d,\n", len(interface.requests))
-	fmt.fprintf(out, "\t{{}},\n")
+	fmt.fprintf(out, "\t&%s_requests[0],\n", interface.name)
 	fmt.fprintf(out, "\t%d,\n", len(interface.events))
 	fmt.fprintf(out, "\t&%s_events[0],\n", interface.name) // Emit pointer to first event, as the original code has struct wl_message *events
 	fmt.fprintf(out, "}}\n\n")
