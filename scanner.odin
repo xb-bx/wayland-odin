@@ -448,16 +448,54 @@ emit_private_code :: proc(out: os.Handle, interface: Interface) {
 	fmt.fprintf(out, "}}\n\n")
 }
 
+scanner_config :: struct {
+	input_path:  string,
+	output_path: string,
+}
+
+// Really dumb argument parser
+// Return scanner configuration
+parse_args :: proc() -> scanner_config {
+	cfg: scanner_config
+	input_path := ""
+	output_path := ""
+
+	for arg, idx in os.args[1:] {
+		switch arg {
+		case "-i":
+			cfg.input_path = os.args[idx + 2]
+		case "-o":
+			cfg.output_path = os.args[idx + 2]
+		}
+	}
+	return cfg
+}
+
+USAGE :: `
+Usage:
+-i <input path>
+-o <output path>
+
+Missing input path or outputh path
+`
+
 // Prolly should use a string builder
 main :: proc() {
-	out, _ := os.open("wayland/wayland.odin", os.O_CREATE | os.O_TRUNC | os.O_RDWR, os.S_IRWXU)
+	cfg := parse_args()
+	if cfg.input_path == "" || cfg.output_path == "" {
+		fmt.println(USAGE)
+		os.exit(1)
+	}
+	fmt.println(cfg)
+
+	out, _ := os.open(cfg.output_path, os.O_CREATE | os.O_TRUNC | os.O_RDWR, os.S_IRWXU)
 
 	interfaces: [dynamic]Interface
 
 	fmt.fprintln(out, "package wayland\n")
 	fmt.fprintln(out, "import \"core:c\"\n")
 
-	doc, err := xml.load_from_file("wayland.xml")
+	doc, err := xml.load_from_file(cfg.input_path)
 
 	// Parse
 	for el in doc.elements {
@@ -466,10 +504,11 @@ main :: proc() {
 		}
 	}
 
+	// Emit code
 	for i in interfaces {
 		emit_interface_code(out, i)
 	}
 
-	// Write
+	// Close file
 	os.close(out)
 }
