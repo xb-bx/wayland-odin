@@ -17,6 +17,7 @@
           wayland-scanner
           wayland-protocols
           odin
+          gdb
         ];
         shellHook = "zsh";
         name = "odin dev shell";
