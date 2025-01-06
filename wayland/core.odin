@@ -18,6 +18,20 @@ foreign lib {
 	proxy_add_listener :: proc(_: ^wl_proxy, _: ^Implementation, _: rawptr) -> c.int ---
 }
 
+// struct wl_map {
+// 	struct wl_array client_entries;
+// 	struct wl_array server_entries;
+// 	uint32_t side;
+// 	uint32_t free_list;
+// };
+
+wl_map :: struct {
+	client_entries: wl_array,
+	server_entries: wl_array,
+	side:           c.uint32_t,
+	free_list:      c.uint32_t,
+}
+
 //struct wl_array {
 //	/** Array size */
 //	size_t size;
@@ -80,6 +94,23 @@ wl_object :: struct {
 	id:             c.uint32_t,
 }
 
+
+wl_argument :: union {
+	c.int32_t, /**< `int`    */
+	c.uint32_t, /**< `uint`   */
+	cstring, /**< `string` */
+	wl_object, /**< `object` */
+	^wl_array, /**< `array`  */
+}
+
+wl_dispatcher_func_t :: #type proc "c" (
+	_: rawptr,
+	_: rawptr,
+	_: c.uint32_t,
+	_: ^wl_message,
+	_: ^wl_argument,
+)
+
 // struct wl_proxy {
 // 	struct wl_object object;
 // 	struct wl_display *display;
@@ -93,14 +124,18 @@ wl_object :: struct {
 // 	struct wl_list queue_link; /**< in struct wl_event_queue::proxy_list */
 // };
 
+// typedef int (*wl_dispatcher_func_t)(const void *user_data, void *target,
+// 				    uint32_t opcode, const struct wl_message *msg,
+// 				    union wl_argument *args);
+
 wl_proxy :: struct {
 	object:     wl_object,
 	display:    ^wl_display,
-	queue:      u64, // pointer to wl_event_queue
+	queue:      ^wl_event_queue, // pointer to wl_event_queue
 	flags:      c.uint32_t,
 	refcount:   c.int,
-	user_data:  u64, // void* pointer
-	dispatcher: u64, // wl_dispatcher_func_t dispatcher;
+	user_data:  rawptr, // void* pointer
+	dispatcher: wl_dispatcher_func_t, // wl_dispatcher_func_t dispatcher;
 	version:    c.uint32_t,
 	tag:        cstring,
 	queue_link: wl_list,
@@ -161,6 +196,9 @@ wl_display :: struct {
 	last_error:     c.int,
 	protocol_error: _wl_protocol_error,
 	fd:             c.int,
+	objects:        wl_map,
+	display_queue:  wl_event_queue,
+	default_queue:  wl_event_queue,
 }
 _wl_protocol_error :: struct {
 	code:      c.uint32_t,
