@@ -5,6 +5,10 @@ import "core:fmt"
 import wl "wayland"
 
 
+message :: struct {
+	next: ^message,
+}
+
 global :: proc(
 	data: rawptr,
 	registry: ^wl.wl_registry,

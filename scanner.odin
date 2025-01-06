@@ -265,7 +265,7 @@ emit_request_stubs :: proc(out: os.Handle, interface: Interface) {
 		// Emit proc header start with default first argument
 		fmt.fprintf(
 			out,
-			"%s_%s :: proc(%s: ^%s",
+			"%s_%s :: proc(_%s: ^%s",
 			interface.name,
 			request.name,
 			interface.name,
@@ -302,7 +302,7 @@ emit_request_stubs :: proc(out: os.Handle, interface: Interface) {
 		fmt.fprintf(
 			out,
 			`proxy_marshal_flags(
-                cast(^wl_proxy)%s,
+                cast(^wl_proxy)_%s,
 		        %d`,
 			interface.name,
 			request.opcode,
@@ -326,7 +326,7 @@ emit_request_stubs :: proc(out: os.Handle, interface: Interface) {
 		if ret != nil && ret.interface == "" {
 			fmt.fprintf(out, ", version")
 		} else {
-			fmt.fprintf(out, ", proxy_get_version(cast(^wl_proxy)%s)", interface.name)
+			fmt.fprintf(out, ", proxy_get_version(cast(^wl_proxy)_%s)", interface.name)
 		}
 		fmt.fprintf(out, ", %s", request.type == "destructor" ? "WL_MARSHAL_FLAG_DESTROY" : "0")
 
@@ -429,22 +429,29 @@ emit_private_code :: proc(out: os.Handle, interface: Interface) {
 	}
 	fmt.fprintf(out, "}}\n\n")
 
-	// Interface struct
-	fmt.fprintf(out, "%s_interface: wl_interface = wl_interface{{\n", interface.name)
-	fmt.fprintf(out, "\t\"%s\",\n", interface.name)
-	fmt.fprintf(out, "\t%s,\n", interface.version)
-	fmt.fprintf(out, "\t%d,\n", len(interface.requests))
+	// Interface struct and @(init) function
+	// We need init function in order to avoid cyclic initialization
+	// since the original scanner relied on a list of interfaces and pointer aritmetic
+	// which we should not use in odin
+	fmt.fprintf(out, "%s_interface: wl_interface = {{}}\n", interface.name)
+	fmt.fprintf(out, "@(init)\n")
+	fmt.fprintf(out, "init_%s_interface :: proc() {{\n", interface.name)
+	fmt.fprintf(out, "\t%s_interface = {{\n", interface.name)
+	fmt.fprintf(out, "\t\t\"%s\",\n", interface.name)
+	fmt.fprintf(out, "\t\t%s,\n", interface.version)
+	fmt.fprintf(out, "\t\t%d,\n", len(interface.requests))
 	if len(interface.requests) > 0 {
-		fmt.fprintf(out, "\t&%s_requests[0],\n", interface.name)
+		fmt.fprintf(out, "\t\t&%s_requests[0],\n", interface.name)
 	} else {
-		fmt.fprintf(out, "\tnil,\n")
+		fmt.fprintf(out, "\t\tnil,\n")
 	}
-	fmt.fprintf(out, "\t%d,\n", len(interface.events))
+	fmt.fprintf(out, "\t\t%d,\n", len(interface.events))
 	if len(interface.events) > 0 {
-		fmt.fprintf(out, "\t&%s_events[0],\n", interface.name)
+		fmt.fprintf(out, "\t\t&%s_events[0],\n", interface.name)
 	} else {
-		fmt.fprintf(out, "\tnil,\n")
+		fmt.fprintf(out, "\t\tnil,\n")
 	}
+	fmt.fprintf(out, "\t}}\n")
 	fmt.fprintf(out, "}}\n\n")
 }
 
