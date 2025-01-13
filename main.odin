@@ -60,7 +60,10 @@ registry_listener := wl.wl_registry_listener {
 surface_listener := wl.xdg_surface_listener {
 	configure = surface_configure,
 }
+
 surface_configure :: proc(data: rawptr, surface: ^wl.xdg_surface, serial: c.uint32_t) {
+	fmt.println("surface configure")
+	wl.xdg_surface_ack_configure(surface, serial)
 }
 
 
@@ -68,13 +71,7 @@ main :: proc() {
 	state: state = {}
 
 	display := wl.display_connect(nil)
-	fmt.println(display)
-
 	registry := wl.wl_display_get_registry(display)
-
-	fmt.println(display)
-	fmt.println(registry)
-
 
 	registry_listener := wl.wl_registry_listener {
 		global        = global,
@@ -89,9 +86,9 @@ main :: proc() {
 	// Only after first round trip state.compositor is set
 	state.surface = wl.wl_compositor_create_surface(state.compositor)
 
-	fmt.println(state)
-	proxy := cast(^wl.wl_proxy)(state.xdg_base)
-	fmt.println(proxy.object.interface.methods)
 	xdg_surface := wl.xdg_wm_base_get_xdg_surface(state.xdg_base, state.surface)
 	wl.xdg_surface_add_listener(xdg_surface, &surface_listener, &state)
+
+	fmt.println(state)
+	wl.display_dispatch(display)
 }
