@@ -2,8 +2,10 @@ package main
 
 import "core:c"
 import "core:fmt"
+import "utils"
 import wl "wayland"
 
+import "core:sys/posix"
 
 state :: struct {
 	compositor: ^wl.wl_compositor,
@@ -49,34 +51,96 @@ global :: proc(
 	// fmt.println(interface)
 }
 
-global_remove :: proc(data: rawptr, registry: ^wl.wl_registry, name: c.uint32_t) {
-}
 
 registry_listener := wl.wl_registry_listener {
-	global        = global,
-	global_remove = global_remove,
+	global = global,
+	global_remove = proc(data: rawptr, registry: ^wl.wl_registry, name: c.uint32_t) {},
 }
 
 surface_listener := wl.xdg_surface_listener {
 	configure = surface_configure,
 }
 
-surface_configure :: proc(data: rawptr, surface: ^wl.xdg_surface, serial: c.uint32_t) {
-	fmt.println("surface configure")
-	wl.xdg_surface_ack_configure(surface, serial)
+buffer_listener := wl.wl_buffer_listener {
+	release = proc(data: rawptr, wl_buffer: ^wl.wl_buffer) {
+		wl.wl_buffer_destroy(wl_buffer)
+	},
 }
 
+done :: proc(data: rawptr, wl_callback: ^wl.wl_callback, callback_data: c.uint32_t) {
+	fmt.printf("done")
+	state := cast(^state)data
+
+	wl_callback_destroy(wl_callback)
+
+	wl_callback := wl.wl_surface_frame(state.surface)
+	wl.wl_callback_add_listener(wl_callback, &frame_callback_listener, state)
+
+	//buffer := get_buffer(state, 800, 600)
+	//wl.wl_surface_attach(state.surface, buffer, 0, 0)
+	//wl.wl_surface_damage(state.surface, 0, 0, c.INT32_MAX, c.INT32_MAX)
+	//wl.wl_surface_commit(state.surface)
+}
+
+frame_callback_listener := wl.wl_callback_listener {
+	done = done,
+}
+
+surface_configure :: proc(data: rawptr, surface: ^wl.xdg_surface, serial: c.uint32_t) {
+	state := cast(^state)data
+
+	fmt.println("surface configure")
+	wl.xdg_surface_ack_configure(surface, serial)
+
+	buffer := get_buffer(state, 800, 600)
+	//wl.wl_surface_attach(state.surface, buffer, 0, 0)
+	//wl.wl_surface_damage(state.surface, 0, 0, c.INT32_MAX, c.INT32_MAX)
+	//wl.wl_surface_commit(state.surface)
+}
+
+// This should be generated once this whole thing works
+wl_callback_destroy :: proc(wl_callback: ^wl.wl_callback) {
+	wl.proxy_destroy(cast(^wl.wl_proxy)wl_callback)
+}
+
+get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl_buffer {
+	stride := width * 4
+	shm_pool_size := height * stride
+
+	fd := utils.allocate_shm_file(shm_pool_size)
+	pool := wl.wl_shm_create_pool(state.shm, cast(c.int)fd, shm_pool_size)
+
+	//uint8_t* pool_data = mmap(NULL, shm_pool_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	//
+	pool_data := posix.mmap(
+		nil,
+		cast(uint)shm_pool_size,
+		{posix.Prot_Flag_Bits.READ, posix.Prot_Flag_Bits.WRITE},
+		{posix.Map_Flag_Bits.SHARED},
+		fd,
+		0,
+	)
+	buffer := wl.wl_shm_pool_create_buffer(pool, 0, width, height, stride, 0)
+
+	//wl.wl_shm_pool_destroy(pool)
+	posix.close(fd)
+
+	//// This munmap yields segfault, but this is in default documentation
+	///* munmap(pool_data, shm_pool_size); */
+	//// Clear the surface (can't use the memset way for the life of me)
+	//draw(state, pool_data, width, height, stride);
+
+	//wl.wl_buffer_add_listener(buffer, &buffer_listener, nil)
+
+	//return buffer
+	return nil
+}
 
 main :: proc() {
 	state: state = {}
 
 	display := wl.display_connect(nil)
 	registry := wl.wl_display_get_registry(display)
-
-	registry_listener := wl.wl_registry_listener {
-		global        = global,
-		global_remove = global_remove,
-	}
 
 	wl.wl_registry_add_listener(registry, &registry_listener, &state)
 	x := wl.display_roundtrip(display)
@@ -90,5 +154,13 @@ main :: proc() {
 	wl.xdg_surface_add_listener(xdg_surface, &surface_listener, &state)
 
 	fmt.println(state)
-	wl.display_dispatch(display)
+	toplevel := wl.xdg_surface_get_toplevel(xdg_surface)
+	wl.xdg_toplevel_set_title(toplevel, "Odin Wayland")
+
+	wl_callback := wl.wl_surface_frame(state.surface)
+	wl.wl_callback_add_listener(wl_callback, &frame_callback_listener, &state)
+	wl.wl_surface_commit(state.surface)
+
+
+	for {wl.display_dispatch(display)}
 }

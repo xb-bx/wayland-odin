@@ -211,7 +211,7 @@ emit_listeners :: proc(out: os.Handle, interface: Interface) {
 
 	// Generate *_add_listener proc for each interface
 	//FIXME(quadrado): Remove auto cast from here when you have a fking idea how *void**(**)* works, or whatever
-	template := `%s_add_listener :: proc(
+	add_listener_template := `%s_add_listener :: proc(
     %s: ^%s,
     listener: ^%s_listener,
     data: rawptr,
@@ -225,13 +225,33 @@ emit_listeners :: proc(out: os.Handle, interface: Interface) {
 
 	fmt.fprintf(
 		out,
-		template,
+		add_listener_template,
 		interface.name,
 		interface.name,
 		interface.name,
 		interface.name,
 		interface.name,
 	)
+
+
+	// Emit function destroy
+	//	destroy_template := `%s_destroy :: proc(
+	//    %s: ^%s,
+	//) {{
+	//    proxy_destroy(cast(^wl_proxy)%s)
+	//}};
+	//
+	//`
+	//
+	//
+	//	fmt.fprintf(
+	//		out,
+	//		destroy_template,
+	//		interface.name,
+	//		interface.name,
+	//		interface.name,
+	//		interface.name,
+	//	)
 }
 
 emit_request_stubs :: proc(out: os.Handle, interface: Interface) {
@@ -487,6 +507,7 @@ Usage:
 
 Missing input path or outputh path
 `
+
 
 // Prolly should use a string builder
 main :: proc() {
