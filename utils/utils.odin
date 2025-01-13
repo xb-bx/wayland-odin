@@ -49,7 +49,7 @@ import "core:sys/posix"
 
 allocate_shm_file :: proc(size: c.int32_t) -> posix.FD {
 	using posix
-	name: cstring = "/wl_shm-cenas"
+	name: cstring = "/wl_shm-stuff"
 
 	fd := shm_open(
 		name,

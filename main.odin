@@ -108,6 +108,10 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 	shm_pool_size := height * stride
 
 	fd := utils.allocate_shm_file(shm_pool_size)
+	if fd < 0 {
+		fmt.println("Errror")
+		return nil
+	}
 	pool := wl.wl_shm_create_pool(state.shm, cast(c.int)fd, shm_pool_size)
 
 	//uint8_t* pool_data = mmap(NULL, shm_pool_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
@@ -120,7 +124,7 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 		fd,
 		0,
 	)
-	buffer := wl.wl_shm_pool_create_buffer(pool, 0, width, height, stride, 0)
+	//buffer := wl.wl_shm_pool_create_buffer(pool, 0, width, height, stride, 0)
 
 	//wl.wl_shm_pool_destroy(pool)
 	posix.close(fd)
