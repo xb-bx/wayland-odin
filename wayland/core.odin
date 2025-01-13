@@ -18,6 +18,8 @@ foreign lib {
 	display_roundtrip :: proc(_: ^wl_display) -> c.int ---
 	@(link_name = "wl_proxy_add_listener")
 	proxy_add_listener :: proc(_: ^wl_proxy, _: ^Implementation, _: rawptr) -> c.int ---
+	@(link_name = "wl_proxy_destroy")
+	proxy_destroy :: proc(_: ^wl_proxy) ---
 }
 
 // struct wl_map {
