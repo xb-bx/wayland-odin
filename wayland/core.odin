@@ -72,7 +72,7 @@ wl_event_queue :: struct {
 wl_message :: struct {
 	name:      cstring,
 	signature: cstring,
-	types:     []^wl_interface,
+	types:     [^]^wl_interface,
 }
 
 wl_interface :: struct {
@@ -190,16 +190,19 @@ wl_connection :: struct {
 // 	pthread_cond_t reader_cond;
 // };
 
-wl_display :: struct {
-	proxy:          wl_proxy,
-	connection:     ^wl_connection,
-	last_error:     c.int,
-	protocol_error: _wl_protocol_error,
-	fd:             c.int,
-	objects:        wl_map,
-	display_queue:  wl_event_queue,
-	default_queue:  wl_event_queue,
-}
+// wl_display :: struct {
+// 	proxy:          wl_proxy,
+// 	connection:     ^wl_connection,
+// 	last_error:     c.int,
+// 	protocol_error: _wl_protocol_error,
+// 	fd:             c.int,
+// 	objects:        wl_map,
+// 	display_queue:  wl_event_queue,
+// 	default_queue:  wl_event_queue,
+// }
+
+wl_display :: struct {}
+
 _wl_protocol_error :: struct {
 	code:      c.uint32_t,
 	interface: ^wl_interface,

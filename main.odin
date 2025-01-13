@@ -46,6 +46,7 @@ global :: proc(
 				version,
 			))
 	}
+	// fmt.println(interface)
 }
 
 global_remove :: proc(data: rawptr, registry: ^wl.wl_registry, name: c.uint32_t) {
@@ -56,11 +57,11 @@ registry_listener := wl.wl_registry_listener {
 	global_remove = global_remove,
 }
 
-// surface_listener := wl.xdg_surface_listener {
-// 	configure = surface_configure,
-// }
-// surface_configure :: proc(data: rawptr, surface: ^wl.xdg_surface, serial: c.uint32_t) {
-// }
+surface_listener := wl.xdg_surface_listener {
+	configure = surface_configure,
+}
+surface_configure :: proc(data: rawptr, surface: ^wl.xdg_surface, serial: c.uint32_t) {
+}
 
 
 main :: proc() {
@@ -83,17 +84,14 @@ main :: proc() {
 	wl.wl_registry_add_listener(registry, &registry_listener, &state)
 	x := wl.display_roundtrip(display)
 
-	fmt.println(x)
+	// fmt.println(x)
 
 	// Only after first round trip state.compositor is set
 	state.surface = wl.wl_compositor_create_surface(state.compositor)
-	fmt.println(display.protocol_error)
 
 	fmt.println(state)
-	fmt.println(wl.wl_surface_interface)
 	proxy := cast(^wl.wl_proxy)(state.xdg_base)
 	fmt.println(proxy.object.interface.methods)
 	xdg_surface := wl.xdg_wm_base_get_xdg_surface(state.xdg_base, state.surface)
-	// wl.xdg_surface_add_listener(xdg_surface, &surface_listener, &state)
-
+	wl.xdg_surface_add_listener(xdg_surface, &surface_listener, &state)
 }

@@ -405,7 +405,7 @@ emit_requests_message :: proc(out: os.Handle, request: Request) {
 
 	fmt.fprintf(out, "\t{{ \"%s\", \"", request.name)
 	fmt.fprintf(out, "%s", emit_args_string(request.args))
-	fmt.fprintf(out, "\", {{%s}} }},\n", strings.join(type_arr[:], ", "))
+	fmt.fprintf(out, "\", raw_data([]^wl_interface{{%s}}) }},\n", strings.join(type_arr[:], ", "))
 }
 
 emit_events_message :: proc(out: os.Handle, event: Event) {
@@ -442,12 +442,14 @@ emit_private_code :: proc(out: os.Handle, interface: Interface) {
 	fmt.fprintf(out, "\t\t%d,\n", len(interface.requests))
 	if len(interface.requests) > 0 {
 		fmt.fprintf(out, "\t\t&%s_requests[0],\n", interface.name)
+		// fmt.fprintf(out, "\t\t%s_requests,\n", interface.name)
 	} else {
 		fmt.fprintf(out, "\t\tnil,\n")
 	}
 	fmt.fprintf(out, "\t\t%d,\n", len(interface.events))
 	if len(interface.events) > 0 {
 		fmt.fprintf(out, "\t\t&%s_events[0],\n", interface.name)
+		// fmt.fprintf(out, "\t\t%s_events,\n", interface.name)
 	} else {
 		fmt.fprintf(out, "\t\tnil,\n")
 	}

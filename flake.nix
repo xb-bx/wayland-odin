@@ -18,6 +18,7 @@
           wayland-protocols
           odin
           gdb
+          seer
         ];
         shellHook = "zsh";
         name = "odin dev shell";
