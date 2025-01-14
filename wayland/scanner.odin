@@ -1,4 +1,4 @@
-package main
+package wayland
 
 import "core:encoding/xml"
 import "core:fmt"
