@@ -153,7 +153,6 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 		pixels[i].g = 0xce
 		pixels[i].b = 0xeb
 	}
-	fmt.println(pixels)
 
 	wl.wl_buffer_add_listener(buffer, &buffer_listener, nil)
 
@@ -186,6 +185,7 @@ main :: proc() {
 	wl.wl_callback_add_listener(wl_callback, &frame_callback_listener, &state)
 	wl.wl_surface_commit(state.surface)
 
+	utils.allocate_shm_file(1000)
 
 	for {wl.display_dispatch(display)}
 }

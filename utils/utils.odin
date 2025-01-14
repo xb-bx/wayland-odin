@@ -1,6 +1,7 @@
 package utils
 
 import "core:c"
+import "core:fmt"
 import "core:os"
 import "core:sys/posix"
 
@@ -46,11 +47,17 @@ import "core:sys/posix"
 //    }
 //    return fd;
 //}
+create_shm_file :: proc() -> c.int32_t {
+	retries := 100
+	return 1
+}
 
 allocate_shm_file :: proc(size: c.int32_t) -> posix.FD {
 	using posix
 	name: cstring = "/wl_shm-stuff"
 
+	modes: mode_t = {Mode_Bits.IWUSR, Mode_Bits.IRUSR}
+	fmt.println(modes)
 	fd := shm_open(
 		name,
 		{O_Flag_Bits.RDWR, O_Flag_Bits.CREAT, O_Flag_Bits.EXCL},
