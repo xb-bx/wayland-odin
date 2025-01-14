@@ -1,11 +1,18 @@
 package main
 
 import "core:c"
+import "core:c/libc"
 import "core:fmt"
 import "utils"
 import wl "wayland"
 
 import "core:sys/posix"
+
+foreign import lib "lib.o"
+
+foreign lib {
+	allocate_shm_file :: proc(_: libc.size_t) -> c.int ---
+}
 
 state :: struct {
 	compositor: ^wl.wl_compositor,
@@ -76,10 +83,10 @@ done :: proc(data: rawptr, wl_callback: ^wl.wl_callback, callback_data: c.uint32
 	wl_callback := wl.wl_surface_frame(state.surface)
 	wl.wl_callback_add_listener(wl_callback, &frame_callback_listener, state)
 
-	//buffer := get_buffer(state, 800, 600)
-	//wl.wl_surface_attach(state.surface, buffer, 0, 0)
-	//wl.wl_surface_damage(state.surface, 0, 0, c.INT32_MAX, c.INT32_MAX)
-	//wl.wl_surface_commit(state.surface)
+	buffer := get_buffer(state, 800, 600)
+	wl.wl_surface_attach(state.surface, buffer, 0, 0)
+	wl.wl_surface_damage(state.surface, 0, 0, c.INT32_MAX, c.INT32_MAX)
+	wl.wl_surface_commit(state.surface)
 }
 
 frame_callback_listener := wl.wl_callback_listener {
@@ -93,9 +100,9 @@ surface_configure :: proc(data: rawptr, surface: ^wl.xdg_surface, serial: c.uint
 	wl.xdg_surface_ack_configure(surface, serial)
 
 	buffer := get_buffer(state, 800, 600)
-	//wl.wl_surface_attach(state.surface, buffer, 0, 0)
-	//wl.wl_surface_damage(state.surface, 0, 0, c.INT32_MAX, c.INT32_MAX)
-	//wl.wl_surface_commit(state.surface)
+	wl.wl_surface_attach(state.surface, buffer, 0, 0)
+	wl.wl_surface_damage(state.surface, 0, 0, c.INT32_MAX, c.INT32_MAX)
+	wl.wl_surface_commit(state.surface)
 }
 
 // This should be generated once this whole thing works
@@ -107,12 +114,12 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 	stride := width * 4
 	shm_pool_size := height * stride
 
-	fd := utils.allocate_shm_file(shm_pool_size)
+	fd := cast(posix.FD)allocate_shm_file(cast(libc.size_t)shm_pool_size)
 	if fd < 0 {
 		fmt.println("Errror")
 		return nil
 	}
-	pool := wl.wl_shm_create_pool(state.shm, cast(c.int)fd, shm_pool_size)
+	pool := wl.wl_shm_create_pool(state.shm, cast(c.int32_t)fd, shm_pool_size)
 
 	//uint8_t* pool_data = mmap(NULL, shm_pool_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	//
@@ -124,7 +131,7 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 		fd,
 		0,
 	)
-	//buffer := wl.wl_shm_pool_create_buffer(pool, 0, width, height, stride, 0)
+	buffer := wl.wl_shm_pool_create_buffer(pool, 0, width, height, stride, 0)
 
 	//wl.wl_shm_pool_destroy(pool)
 	posix.close(fd)
@@ -137,7 +144,7 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 	//wl.wl_buffer_add_listener(buffer, &buffer_listener, nil)
 
 	//return buffer
-	return nil
+	return buffer
 }
 
 main :: proc() {
