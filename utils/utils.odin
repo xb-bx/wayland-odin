@@ -116,10 +116,23 @@ rand_string :: proc(size: uint) -> string {
 	return strings.to_string(sb)
 }
 
-create_shm_file :: proc() -> c.int32_t {
-	retries := 100
-	return 1
-}
+// create_shm_file :: proc() -> posix.FD {
+// 	using posix
+// 	retries := 100
+// 	for {
+// 		name := strings.tofmt.tprintf("/wl-shm-%s", rand_string(16))
+// 		fd := shm_open(
+// 			name,
+// 			{O_Flag_Bits.RDWR, O_Flag_Bits.CREAT, O_Flag_Bits.EXCL},
+// 			{Mode_Bits.IWUSR, Mode_Bits.IRUSR},
+// 		)
+// 		if (fd >= 0) {
+// 			posix.shm_unlink(name)
+// 			return fd
+// 		}
+// 	}
+// 	return 1
+// }
 
 allocate_shm_file :: proc(size: c.int32_t) -> posix.FD {
 	using posix

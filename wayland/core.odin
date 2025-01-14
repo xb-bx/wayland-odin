@@ -90,7 +90,7 @@ wl_interface :: struct {
 
 
 // what?
-Implementation :: #type proc()
+Implementation :: #type proc "c" ()
 
 wl_object :: struct {
 	interface:      ^wl_interface,

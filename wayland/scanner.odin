@@ -1,3 +1,4 @@
+#+feature dynamic-literals
 package wayland
 
 import "core:encoding/xml"

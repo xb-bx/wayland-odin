@@ -85,7 +85,7 @@ buffer_listener := wl.wl_buffer_listener {
 	},
 }
 
-done :: proc(data: rawptr, wl_callback: ^wl.wl_callback, callback_data: c.uint32_t) {
+done :: proc "c" (data: rawptr, wl_callback: ^wl.wl_callback, callback_data: c.uint32_t) {
 	context = runtime.default_context()
 	state := cast(^state)data
 
@@ -104,9 +104,8 @@ frame_callback_listener := wl.wl_callback_listener {
 	done = done,
 }
 
-surface_configure :: proc(data: rawptr, surface: ^wl.xdg_surface, serial: c.uint32_t) {
+surface_configure :: proc "c" (data: rawptr, surface: ^wl.xdg_surface, serial: c.uint32_t) {
 	context = runtime.default_context()
-
 	state := cast(^state)data
 
 	fmt.println("surface configure")

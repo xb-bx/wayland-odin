@@ -282,7 +282,7 @@ init_xdg_positioner_interface :: proc() {
 
 xdg_surface :: struct {}
 xdg_surface_listener :: struct {
-	configure: proc(data: rawptr, xdg_surface: ^xdg_surface, serial: c.uint32_t),
+	configure: proc "c" (data: rawptr, xdg_surface: ^xdg_surface, serial: c.uint32_t),
 }
 
 xdg_surface_add_listener :: proc(

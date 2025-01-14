@@ -13,23 +13,13 @@ wl_display_listener :: struct {
 	delete_id: proc "c" (data: rawptr, wl_display: ^wl_display, id: c.uint32_t),
 }
 
-_wl_display_listener :: struct {
-	error:     proc(
-		data: rawptr,
-		wl_display: ^wl_display,
-		object_id: rawptr,
-		code: c.uint32_t,
-		message: cstring,
-	),
-	delete_id: proc(data: rawptr, wl_display: ^wl_display, id: c.uint32_t),
-}
-
 wl_display_add_listener :: proc(
 	wl_display: ^wl_display,
 	listener: ^wl_display_listener,
 	data: rawptr,
 ) -> c.int {
-	return proxy_add_listener(cast(^wl_proxy)wl_display, cast(^Implementation)listener, data)
+
+	return proxy_add_listener(cast(^wl_proxy)wl_display, auto_cast listener, data)
 }
 
 wl_display_sync :: proc "c" (_wl_display: ^wl_display) -> ^wl_callback {
@@ -143,7 +133,7 @@ init_wl_registry_interface :: proc() {
 
 wl_callback :: struct {}
 wl_callback_listener :: struct {
-	done: proc(data: rawptr, wl_callback: ^wl_callback, callback_data: c.uint32_t),
+	done: proc "c" (data: rawptr, wl_callback: ^wl_callback, callback_data: c.uint32_t),
 }
 
 wl_callback_add_listener :: proc(
@@ -427,6 +417,7 @@ wl_data_offer_receive :: proc "c" (
 	)
 
 }
+
 
 wl_data_offer_destroy :: proc "c" (_wl_data_offer: ^wl_data_offer) {
 	proxy_marshal_flags(
