@@ -21,6 +21,13 @@ state :: struct {
 	surface:    ^wl.wl_surface,
 }
 
+pixel :: struct {
+	b: u8,
+	g: u8,
+	r: u8,
+	a: u8,
+}
+
 global :: proc(
 	data: rawptr,
 	registry: ^wl.wl_registry,
@@ -132,15 +139,23 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 	)
 	buffer := wl.wl_shm_pool_create_buffer(pool, 0, width, height, stride, 0)
 
-	//wl.wl_shm_pool_destroy(pool)
+	wl.wl_shm_pool_destroy(pool)
 	posix.close(fd)
 
 	//// This munmap yields segfault, but this is in default documentation
 	///* munmap(pool_data, shm_pool_size); */
 	//// Clear the surface (can't use the memset way for the life of me)
 	//draw(state, pool_data, width, height, stride);
+	pixels := cast([^]pixel)pool_data
+	for i in 1 ..= shm_pool_size / 4 {
+		pixels[i].a = 255
+		pixels[i].r = 0x9a
+		pixels[i].g = 0xce
+		pixels[i].b = 0xeb
+	}
+	fmt.println(pixels)
 
-	//wl.wl_buffer_add_listener(buffer, &buffer_listener, nil)
+	wl.wl_buffer_add_listener(buffer, &buffer_listener, nil)
 
 	//return buffer
 	return buffer
