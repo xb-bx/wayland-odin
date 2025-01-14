@@ -178,7 +178,7 @@ emit_listeners :: proc(out: os.Handle, interface: Interface) {
 	// Generate listener code based on interface event
 	for event in interface.events {
 		// Start proc definition
-		fmt.fprintf(out, "\t%s: proc(\n", event.name)
+		fmt.fprintf(out, "\t%s: proc \"c\" (\n", event.name)
 
 		// Add default arg of user data and interface pointer
 		fmt.fprintf(out, "\t\tdata: rawptr,\n")
@@ -285,7 +285,7 @@ emit_request_stubs :: proc(out: os.Handle, interface: Interface) {
 		// Emit proc header start with default first argument
 		fmt.fprintf(
 			out,
-			"%s_%s :: proc(_%s: ^%s",
+			"%s_%s :: proc \"c\" (_%s: ^%s",
 			interface.name,
 			request.name,
 			interface.name,

@@ -1,10 +1,12 @@
 package utils
 
+import "base:runtime"
 import "core:c"
 import "core:fmt"
+import "core:math/rand"
 import "core:os"
+import "core:strings"
 import "core:sys/posix"
-
 //void randname(char* buf)
 //{
 //    struct timespec ts;
@@ -47,6 +49,73 @@ import "core:sys/posix"
 //    }
 //    return fd;
 //}
+
+
+// Dumb I know
+_choices: []u8 = {
+	'a',
+	'b',
+	'c',
+	'd',
+	'e',
+	'f',
+	'g',
+	'h',
+	'i',
+	'j',
+	'k',
+	'l',
+	'm',
+	'n',
+	'o',
+	'p',
+	'q',
+	'r',
+	's',
+	't',
+	'u',
+	'v',
+	'w',
+	'x',
+	'y',
+	'z',
+	'A',
+	'B',
+	'C',
+	'D',
+	'E',
+	'F',
+	'G',
+	'H',
+	'I',
+	'J',
+	'K',
+	'L',
+	'M',
+	'N',
+	'O',
+	'P',
+	'Q',
+	'R',
+	'S',
+	'T',
+	'U',
+	'V',
+	'W',
+	'X',
+	'Y',
+	'Z',
+}
+rand_string :: proc(size: uint) -> string {
+	sb := strings.builder_make()
+
+	for i in 0 ..< size {
+		strings.write_byte(&sb, rand.choice(_choices[:]))
+	}
+
+	return strings.to_string(sb)
+}
+
 create_shm_file :: proc() -> c.int32_t {
 	retries := 100
 	return 1

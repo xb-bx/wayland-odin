@@ -8,6 +8,8 @@ import wl "wayland"
 
 import "core:sys/posix"
 
+import "base:runtime"
+
 foreign import lib "lib.o"
 
 foreign lib {
@@ -28,7 +30,8 @@ pixel :: struct {
 	a: u8,
 }
 
-global :: proc(
+
+global :: proc "c" (
 	data: rawptr,
 	registry: ^wl.wl_registry,
 	name: c.uint32_t,
@@ -62,13 +65,14 @@ global :: proc(
 				version,
 			))
 	}
-	// fmt.println(interface)
 }
 
+global_remove :: proc "c" (data: rawptr, registry: ^wl.wl_registry, name: c.uint32_t) {
+}
 
 registry_listener := wl.wl_registry_listener {
-	global = global,
-	global_remove = proc(data: rawptr, registry: ^wl.wl_registry, name: c.uint32_t) {},
+	global        = global,
+	global_remove = global_remove,
 }
 
 surface_listener := wl.xdg_surface_listener {
@@ -76,12 +80,13 @@ surface_listener := wl.xdg_surface_listener {
 }
 
 buffer_listener := wl.wl_buffer_listener {
-	release = proc(data: rawptr, wl_buffer: ^wl.wl_buffer) {
+	release = proc "c" (data: rawptr, wl_buffer: ^wl.wl_buffer) {
 		wl.wl_buffer_destroy(wl_buffer)
 	},
 }
 
-done :: proc(data: rawptr, wl_callback: ^wl.wl_callback, callback_data: c.uint32_t) {
+done :: proc "c" (data: rawptr, wl_callback: ^wl.wl_callback, callback_data: c.uint32_t) {
+	context = runtime.default_context()
 	state := cast(^state)data
 
 	wl_callback_destroy(wl_callback)
@@ -99,7 +104,9 @@ frame_callback_listener := wl.wl_callback_listener {
 	done = done,
 }
 
-surface_configure :: proc(data: rawptr, surface: ^wl.xdg_surface, serial: c.uint32_t) {
+surface_configure :: proc "c" (data: rawptr, surface: ^wl.xdg_surface, serial: c.uint32_t) {
+	context = runtime.default_context()
+
 	state := cast(^state)data
 
 	fmt.println("surface configure")
@@ -112,7 +119,7 @@ surface_configure :: proc(data: rawptr, surface: ^wl.xdg_surface, serial: c.uint
 }
 
 // This should be generated once this whole thing works
-wl_callback_destroy :: proc(wl_callback: ^wl.wl_callback) {
+wl_callback_destroy :: proc "c" (wl_callback: ^wl.wl_callback) {
 	wl.proxy_destroy(cast(^wl.wl_proxy)wl_callback)
 }
 
@@ -156,15 +163,18 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 
 	wl.wl_buffer_add_listener(buffer, &buffer_listener, nil)
 
-	//return buffer
+	fmt.println(utils.rand_string(16))
+
 	return buffer
 }
 
 main :: proc() {
 	state: state = {}
 
+
 	display := wl.display_connect(nil)
 	registry := wl.wl_display_get_registry(display)
+
 
 	wl.wl_registry_add_listener(registry, &registry_listener, &state)
 	x := wl.display_roundtrip(display)
@@ -185,7 +195,8 @@ main :: proc() {
 	wl.wl_callback_add_listener(wl_callback, &frame_callback_listener, &state)
 	wl.wl_surface_commit(state.surface)
 
-	utils.allocate_shm_file(1000)
+	//utils.allocate_shm_file(1000)
+	fmt.println(utils.rand_string(16))
 
 	for {wl.display_dispatch(display)}
 }

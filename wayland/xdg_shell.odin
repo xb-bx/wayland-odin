@@ -4,7 +4,7 @@ import "core:c"
 
 xdg_wm_base :: struct {}
 xdg_wm_base_listener :: struct {
-	ping: proc(
+	ping: proc "c" (
 		data: rawptr,
 		xdg_wm_base: ^xdg_wm_base,
 		serial: c.uint32_t,
@@ -20,7 +20,7 @@ xdg_wm_base_add_listener :: proc(
     return proxy_add_listener(cast(^wl_proxy)xdg_wm_base, auto_cast listener, data)
 };
 
-xdg_wm_base_destroy :: proc(_xdg_wm_base: ^xdg_wm_base)
+xdg_wm_base_destroy :: proc "c" (_xdg_wm_base: ^xdg_wm_base)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_wm_base,
@@ -28,7 +28,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_wm_base_create_positioner :: proc(_xdg_wm_base: ^xdg_wm_base)-> ^xdg_positioner {
+xdg_wm_base_create_positioner :: proc "c" (_xdg_wm_base: ^xdg_wm_base)-> ^xdg_positioner {
 	id: ^wl_proxy
 	id = proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_wm_base,
@@ -38,7 +38,7 @@ xdg_wm_base_create_positioner :: proc(_xdg_wm_base: ^xdg_wm_base)-> ^xdg_positio
 	return cast(^xdg_positioner)id;
 }
 
-xdg_wm_base_get_xdg_surface :: proc(_xdg_wm_base: ^xdg_wm_base,surface : ^wl_surface)-> ^xdg_surface {
+xdg_wm_base_get_xdg_surface :: proc "c" (_xdg_wm_base: ^xdg_wm_base,surface : ^wl_surface)-> ^xdg_surface {
 	id: ^wl_proxy
 	id = proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_wm_base,
@@ -48,7 +48,7 @@ xdg_wm_base_get_xdg_surface :: proc(_xdg_wm_base: ^xdg_wm_base,surface : ^wl_sur
 	return cast(^xdg_surface)id;
 }
 
-xdg_wm_base_pong :: proc(_xdg_wm_base: ^xdg_wm_base,serial : c.uint32_t)
+xdg_wm_base_pong :: proc "c" (_xdg_wm_base: ^xdg_wm_base,serial : c.uint32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_wm_base,
@@ -93,7 +93,7 @@ xdg_positioner_add_listener :: proc(
     return proxy_add_listener(cast(^wl_proxy)xdg_positioner, auto_cast listener, data)
 };
 
-xdg_positioner_destroy :: proc(_xdg_positioner: ^xdg_positioner)
+xdg_positioner_destroy :: proc "c" (_xdg_positioner: ^xdg_positioner)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_positioner,
@@ -101,7 +101,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_positioner_set_size :: proc(_xdg_positioner: ^xdg_positioner,width : c.int32_t,height : c.int32_t)
+xdg_positioner_set_size :: proc "c" (_xdg_positioner: ^xdg_positioner,width : c.int32_t,height : c.int32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_positioner,
@@ -109,7 +109,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_positioner_set_anchor_rect :: proc(_xdg_positioner: ^xdg_positioner,x : c.int32_t,y : c.int32_t,width : c.int32_t,height : c.int32_t)
+xdg_positioner_set_anchor_rect :: proc "c" (_xdg_positioner: ^xdg_positioner,x : c.int32_t,y : c.int32_t,width : c.int32_t,height : c.int32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_positioner,
@@ -117,7 +117,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_positioner_set_anchor :: proc(_xdg_positioner: ^xdg_positioner,anchor : c.uint32_t)
+xdg_positioner_set_anchor :: proc "c" (_xdg_positioner: ^xdg_positioner,anchor : c.uint32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_positioner,
@@ -125,7 +125,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_positioner_set_gravity :: proc(_xdg_positioner: ^xdg_positioner,gravity : c.uint32_t)
+xdg_positioner_set_gravity :: proc "c" (_xdg_positioner: ^xdg_positioner,gravity : c.uint32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_positioner,
@@ -133,7 +133,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_positioner_set_constraint_adjustment :: proc(_xdg_positioner: ^xdg_positioner,constraint_adjustment : c.uint32_t)
+xdg_positioner_set_constraint_adjustment :: proc "c" (_xdg_positioner: ^xdg_positioner,constraint_adjustment : c.uint32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_positioner,
@@ -141,7 +141,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_positioner_set_offset :: proc(_xdg_positioner: ^xdg_positioner,x : c.int32_t,y : c.int32_t)
+xdg_positioner_set_offset :: proc "c" (_xdg_positioner: ^xdg_positioner,x : c.int32_t,y : c.int32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_positioner,
@@ -149,7 +149,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_positioner_set_reactive :: proc(_xdg_positioner: ^xdg_positioner)
+xdg_positioner_set_reactive :: proc "c" (_xdg_positioner: ^xdg_positioner)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_positioner,
@@ -157,7 +157,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_positioner_set_parent_size :: proc(_xdg_positioner: ^xdg_positioner,parent_width : c.int32_t,parent_height : c.int32_t)
+xdg_positioner_set_parent_size :: proc "c" (_xdg_positioner: ^xdg_positioner,parent_width : c.int32_t,parent_height : c.int32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_positioner,
@@ -165,7 +165,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_positioner_set_parent_configure :: proc(_xdg_positioner: ^xdg_positioner,serial : c.uint32_t)
+xdg_positioner_set_parent_configure :: proc "c" (_xdg_positioner: ^xdg_positioner,serial : c.uint32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_positioner,
@@ -204,7 +204,7 @@ init_xdg_positioner_interface :: proc() {
 
 xdg_surface :: struct {}
 xdg_surface_listener :: struct {
-	configure: proc(
+	configure: proc "c" (
 		data: rawptr,
 		xdg_surface: ^xdg_surface,
 		serial: c.uint32_t,
@@ -220,7 +220,7 @@ xdg_surface_add_listener :: proc(
     return proxy_add_listener(cast(^wl_proxy)xdg_surface, auto_cast listener, data)
 };
 
-xdg_surface_destroy :: proc(_xdg_surface: ^xdg_surface)
+xdg_surface_destroy :: proc "c" (_xdg_surface: ^xdg_surface)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_surface,
@@ -228,7 +228,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_surface_get_toplevel :: proc(_xdg_surface: ^xdg_surface)-> ^xdg_toplevel {
+xdg_surface_get_toplevel :: proc "c" (_xdg_surface: ^xdg_surface)-> ^xdg_toplevel {
 	id: ^wl_proxy
 	id = proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_surface,
@@ -238,7 +238,7 @@ xdg_surface_get_toplevel :: proc(_xdg_surface: ^xdg_surface)-> ^xdg_toplevel {
 	return cast(^xdg_toplevel)id;
 }
 
-xdg_surface_get_popup :: proc(_xdg_surface: ^xdg_surface,parent : ^xdg_surface,positioner : ^xdg_positioner)-> ^xdg_popup {
+xdg_surface_get_popup :: proc "c" (_xdg_surface: ^xdg_surface,parent : ^xdg_surface,positioner : ^xdg_positioner)-> ^xdg_popup {
 	id: ^wl_proxy
 	id = proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_surface,
@@ -248,7 +248,7 @@ xdg_surface_get_popup :: proc(_xdg_surface: ^xdg_surface,parent : ^xdg_surface,p
 	return cast(^xdg_popup)id;
 }
 
-xdg_surface_set_window_geometry :: proc(_xdg_surface: ^xdg_surface,x : c.int32_t,y : c.int32_t,width : c.int32_t,height : c.int32_t)
+xdg_surface_set_window_geometry :: proc "c" (_xdg_surface: ^xdg_surface,x : c.int32_t,y : c.int32_t,width : c.int32_t,height : c.int32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_surface,
@@ -256,7 +256,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_surface_ack_configure :: proc(_xdg_surface: ^xdg_surface,serial : c.uint32_t)
+xdg_surface_ack_configure :: proc "c" (_xdg_surface: ^xdg_surface,serial : c.uint32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_surface,
@@ -291,24 +291,24 @@ init_xdg_surface_interface :: proc() {
 
 xdg_toplevel :: struct {}
 xdg_toplevel_listener :: struct {
-	configure: proc(
+	configure: proc "c" (
 		data: rawptr,
 		xdg_toplevel: ^xdg_toplevel,
 		width: c.int32_t,
 		height: c.int32_t,
 		states: ^wl_array,
 	),
-	close: proc(
+	close: proc "c" (
 		data: rawptr,
 		xdg_toplevel: ^xdg_toplevel,
 	),
-	configure_bounds: proc(
+	configure_bounds: proc "c" (
 		data: rawptr,
 		xdg_toplevel: ^xdg_toplevel,
 		width: c.int32_t,
 		height: c.int32_t,
 	),
-	wm_capabilities: proc(
+	wm_capabilities: proc "c" (
 		data: rawptr,
 		xdg_toplevel: ^xdg_toplevel,
 		capabilities: ^wl_array,
@@ -324,7 +324,7 @@ xdg_toplevel_add_listener :: proc(
     return proxy_add_listener(cast(^wl_proxy)xdg_toplevel, auto_cast listener, data)
 };
 
-xdg_toplevel_destroy :: proc(_xdg_toplevel: ^xdg_toplevel)
+xdg_toplevel_destroy :: proc "c" (_xdg_toplevel: ^xdg_toplevel)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_toplevel,
@@ -332,7 +332,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_toplevel_set_parent :: proc(_xdg_toplevel: ^xdg_toplevel,parent : ^xdg_toplevel)
+xdg_toplevel_set_parent :: proc "c" (_xdg_toplevel: ^xdg_toplevel,parent : ^xdg_toplevel)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_toplevel,
@@ -340,7 +340,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_toplevel_set_title :: proc(_xdg_toplevel: ^xdg_toplevel,title : cstring)
+xdg_toplevel_set_title :: proc "c" (_xdg_toplevel: ^xdg_toplevel,title : cstring)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_toplevel,
@@ -348,7 +348,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_toplevel_set_app_id :: proc(_xdg_toplevel: ^xdg_toplevel,app_id : cstring)
+xdg_toplevel_set_app_id :: proc "c" (_xdg_toplevel: ^xdg_toplevel,app_id : cstring)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_toplevel,
@@ -356,7 +356,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_toplevel_show_window_menu :: proc(_xdg_toplevel: ^xdg_toplevel,seat : ^wl_seat,serial : c.uint32_t,x : c.int32_t,y : c.int32_t)
+xdg_toplevel_show_window_menu :: proc "c" (_xdg_toplevel: ^xdg_toplevel,seat : ^wl_seat,serial : c.uint32_t,x : c.int32_t,y : c.int32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_toplevel,
@@ -364,7 +364,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_toplevel_move :: proc(_xdg_toplevel: ^xdg_toplevel,seat : ^wl_seat,serial : c.uint32_t)
+xdg_toplevel_move :: proc "c" (_xdg_toplevel: ^xdg_toplevel,seat : ^wl_seat,serial : c.uint32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_toplevel,
@@ -372,7 +372,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_toplevel_resize :: proc(_xdg_toplevel: ^xdg_toplevel,seat : ^wl_seat,serial : c.uint32_t,edges : c.uint32_t)
+xdg_toplevel_resize :: proc "c" (_xdg_toplevel: ^xdg_toplevel,seat : ^wl_seat,serial : c.uint32_t,edges : c.uint32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_toplevel,
@@ -380,7 +380,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_toplevel_set_max_size :: proc(_xdg_toplevel: ^xdg_toplevel,width : c.int32_t,height : c.int32_t)
+xdg_toplevel_set_max_size :: proc "c" (_xdg_toplevel: ^xdg_toplevel,width : c.int32_t,height : c.int32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_toplevel,
@@ -388,7 +388,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_toplevel_set_min_size :: proc(_xdg_toplevel: ^xdg_toplevel,width : c.int32_t,height : c.int32_t)
+xdg_toplevel_set_min_size :: proc "c" (_xdg_toplevel: ^xdg_toplevel,width : c.int32_t,height : c.int32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_toplevel,
@@ -396,7 +396,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_toplevel_set_maximized :: proc(_xdg_toplevel: ^xdg_toplevel)
+xdg_toplevel_set_maximized :: proc "c" (_xdg_toplevel: ^xdg_toplevel)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_toplevel,
@@ -404,7 +404,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_toplevel_unset_maximized :: proc(_xdg_toplevel: ^xdg_toplevel)
+xdg_toplevel_unset_maximized :: proc "c" (_xdg_toplevel: ^xdg_toplevel)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_toplevel,
@@ -412,7 +412,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_toplevel_set_fullscreen :: proc(_xdg_toplevel: ^xdg_toplevel,output : ^wl_output)
+xdg_toplevel_set_fullscreen :: proc "c" (_xdg_toplevel: ^xdg_toplevel,output : ^wl_output)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_toplevel,
@@ -420,7 +420,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_toplevel_unset_fullscreen :: proc(_xdg_toplevel: ^xdg_toplevel)
+xdg_toplevel_unset_fullscreen :: proc "c" (_xdg_toplevel: ^xdg_toplevel)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_toplevel,
@@ -428,7 +428,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_toplevel_set_minimized :: proc(_xdg_toplevel: ^xdg_toplevel)
+xdg_toplevel_set_minimized :: proc "c" (_xdg_toplevel: ^xdg_toplevel)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_toplevel,
@@ -475,7 +475,7 @@ init_xdg_toplevel_interface :: proc() {
 
 xdg_popup :: struct {}
 xdg_popup_listener :: struct {
-	configure: proc(
+	configure: proc "c" (
 		data: rawptr,
 		xdg_popup: ^xdg_popup,
 		x: c.int32_t,
@@ -483,11 +483,11 @@ xdg_popup_listener :: struct {
 		width: c.int32_t,
 		height: c.int32_t,
 	),
-	popup_done: proc(
+	popup_done: proc "c" (
 		data: rawptr,
 		xdg_popup: ^xdg_popup,
 	),
-	repositioned: proc(
+	repositioned: proc "c" (
 		data: rawptr,
 		xdg_popup: ^xdg_popup,
 		token: c.uint32_t,
@@ -503,7 +503,7 @@ xdg_popup_add_listener :: proc(
     return proxy_add_listener(cast(^wl_proxy)xdg_popup, auto_cast listener, data)
 };
 
-xdg_popup_destroy :: proc(_xdg_popup: ^xdg_popup)
+xdg_popup_destroy :: proc "c" (_xdg_popup: ^xdg_popup)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_popup,
@@ -511,7 +511,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_popup_grab :: proc(_xdg_popup: ^xdg_popup,seat : ^wl_seat,serial : c.uint32_t)
+xdg_popup_grab :: proc "c" (_xdg_popup: ^xdg_popup,seat : ^wl_seat,serial : c.uint32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_popup,
@@ -519,7 +519,7 @@ proxy_marshal_flags(
 
 }
 
-xdg_popup_reposition :: proc(_xdg_popup: ^xdg_popup,positioner : ^xdg_positioner,token : c.uint32_t)
+xdg_popup_reposition :: proc "c" (_xdg_popup: ^xdg_popup,positioner : ^xdg_positioner,token : c.uint32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_xdg_popup,
