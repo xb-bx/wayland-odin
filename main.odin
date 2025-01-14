@@ -75,7 +75,6 @@ buffer_listener := wl.wl_buffer_listener {
 }
 
 done :: proc(data: rawptr, wl_callback: ^wl.wl_callback, callback_data: c.uint32_t) {
-	fmt.printf("done")
 	state := cast(^state)data
 
 	wl_callback_destroy(wl_callback)
