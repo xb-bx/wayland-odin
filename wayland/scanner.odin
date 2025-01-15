@@ -211,14 +211,13 @@ emit_listeners :: proc(out: os.Handle, interface: Interface) {
 	fmt.fprintf(out, "}}\n\n")
 
 	// Generate *_add_listener proc for each interface
-	//FIXME(quadrado): Remove auto cast from here when you have a fking idea how *void**(**)* works, or whatever
 	add_listener_template := `%s_add_listener :: proc(
     %s: ^%s,
     listener: ^%s_listener,
     data: rawptr,
 ) -> c.int {{
 
-    return proxy_add_listener(cast(^wl_proxy)%s, auto_cast listener, data)
+    return proxy_add_listener(cast(^wl_proxy)%s, cast(^Implementation)listener, data)
 }};
 
 `

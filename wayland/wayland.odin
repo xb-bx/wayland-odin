@@ -19,7 +19,7 @@ wl_display_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_display, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_display, cast(^Implementation)listener, data)
 }
 
 wl_display_sync :: proc "c" (_wl_display: ^wl_display) -> ^wl_callback {
@@ -83,7 +83,7 @@ wl_registry_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_registry, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_registry, cast(^Implementation)listener, data)
 }
 
 wl_registry_bind :: proc "c" (
@@ -142,7 +142,7 @@ wl_callback_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_callback, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_callback, cast(^Implementation)listener, data)
 }
 
 wl_callback_requests: []wl_message = []wl_message{}
@@ -164,7 +164,7 @@ wl_compositor_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_compositor, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_compositor, cast(^Implementation)listener, data)
 }
 
 wl_compositor_create_surface :: proc "c" (_wl_compositor: ^wl_compositor) -> ^wl_surface {
@@ -219,7 +219,7 @@ wl_shm_pool_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_shm_pool, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_shm_pool, cast(^Implementation)listener, data)
 }
 
 wl_shm_pool_create_buffer :: proc "c" (
@@ -297,7 +297,7 @@ wl_shm_listener :: struct {
 
 wl_shm_add_listener :: proc(wl_shm: ^wl_shm, listener: ^wl_shm_listener, data: rawptr) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_shm, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_shm, cast(^Implementation)listener, data)
 }
 
 wl_shm_create_pool :: proc "c" (_wl_shm: ^wl_shm, fd: c.int32_t, size: c.int32_t) -> ^wl_shm_pool {
@@ -340,7 +340,7 @@ wl_buffer_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_buffer, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_buffer, cast(^Implementation)listener, data)
 }
 
 wl_buffer_destroy :: proc "c" (_wl_buffer: ^wl_buffer) {
@@ -381,7 +381,7 @@ wl_data_offer_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_data_offer, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_data_offer, cast(^Implementation)listener, data)
 }
 
 wl_data_offer_accept :: proc "c" (
@@ -417,7 +417,6 @@ wl_data_offer_receive :: proc "c" (
 	)
 
 }
-
 
 wl_data_offer_destroy :: proc "c" (_wl_data_offer: ^wl_data_offer) {
 	proxy_marshal_flags(
@@ -514,7 +513,7 @@ wl_data_source_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_data_source, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_data_source, cast(^Implementation)listener, data)
 }
 
 wl_data_source_offer :: proc "c" (_wl_data_source: ^wl_data_source, mime_type: cstring) {
@@ -613,7 +612,7 @@ wl_data_device_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_data_device, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_data_device, cast(^Implementation)listener, data)
 }
 
 wl_data_device_start_drag :: proc "c" (
@@ -713,7 +712,11 @@ wl_data_device_manager_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_data_device_manager, auto_cast listener, data)
+	return proxy_add_listener(
+		cast(^wl_proxy)wl_data_device_manager,
+		cast(^Implementation)listener,
+		data,
+	)
 }
 
 wl_data_device_manager_create_data_source :: proc "c" (
@@ -785,7 +788,7 @@ wl_shell_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_shell, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_shell, cast(^Implementation)listener, data)
 }
 
 wl_shell_get_shell_surface :: proc "c" (
@@ -842,7 +845,7 @@ wl_shell_surface_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_shell_surface, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_shell_surface, cast(^Implementation)listener, data)
 }
 
 wl_shell_surface_pong :: proc "c" (_wl_shell_surface: ^wl_shell_surface, serial: c.uint32_t) {
@@ -1074,7 +1077,7 @@ wl_surface_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_surface, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_surface, cast(^Implementation)listener, data)
 }
 
 wl_surface_destroy :: proc "c" (_wl_surface: ^wl_surface) {
@@ -1275,7 +1278,7 @@ wl_seat_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_seat, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_seat, cast(^Implementation)listener, data)
 }
 
 wl_seat_get_pointer :: proc "c" (_wl_seat: ^wl_seat) -> ^wl_pointer {
@@ -1425,7 +1428,7 @@ wl_pointer_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_pointer, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_pointer, cast(^Implementation)listener, data)
 }
 
 wl_pointer_set_cursor :: proc "c" (
@@ -1538,7 +1541,7 @@ wl_keyboard_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_keyboard, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_keyboard, cast(^Implementation)listener, data)
 }
 
 wl_keyboard_release :: proc "c" (_wl_keyboard: ^wl_keyboard) {
@@ -1626,7 +1629,7 @@ wl_touch_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_touch, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_touch, cast(^Implementation)listener, data)
 }
 
 wl_touch_release :: proc "c" (_wl_touch: ^wl_touch) {
@@ -1692,7 +1695,7 @@ wl_output_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_output, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_output, cast(^Implementation)listener, data)
 }
 
 wl_output_release :: proc "c" (_wl_output: ^wl_output) {
@@ -1732,7 +1735,7 @@ wl_region_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_region, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_region, cast(^Implementation)listener, data)
 }
 
 wl_region_destroy :: proc "c" (_wl_region: ^wl_region) {
@@ -1811,7 +1814,7 @@ wl_subcompositor_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_subcompositor, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_subcompositor, cast(^Implementation)listener, data)
 }
 
 wl_subcompositor_destroy :: proc "c" (_wl_subcompositor: ^wl_subcompositor) {
@@ -1878,7 +1881,7 @@ wl_subsurface_add_listener :: proc(
 	data: rawptr,
 ) -> c.int {
 
-	return proxy_add_listener(cast(^wl_proxy)wl_subsurface, auto_cast listener, data)
+	return proxy_add_listener(cast(^wl_proxy)wl_subsurface, cast(^Implementation)listener, data)
 }
 
 wl_subsurface_destroy :: proc "c" (_wl_subsurface: ^wl_subsurface) {
