@@ -165,7 +165,8 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 }
 
 main :: proc() {
-	render.init_egl()
+	//render.init_egl()
+	render.init()
 	state: state = {}
 
 

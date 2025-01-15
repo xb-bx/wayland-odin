@@ -3,10 +3,33 @@ package render
 import "core:fmt"
 import "vendor:egl"
 
+foreign import foo "system:EGL"
+
+@(default_calling_convention = "c", link_prefix = "egl")
+foreign foo {
+	GetError :: proc() -> i32 ---
+}
+
+EGL_BAD_DISPLAY :: 0x3008
+
+//m_pEglDisplay = m_sProc.eglGetPlatformDisplayEXT(
+//	gbm ? EGL_PLATFORM_GBM_KHR : EGL_PLATFORM_DEVICE_EXT,
+//	gbm ? m_pGbmDevice : m_pEglDevice,
+//	attrs.data(),
+//)
+
+// loadGLProc(&m_sProc.eglGetPlatformDisplayEXT, "eglGetPlatformDisplayEXT");
+init :: proc() {
+	using egl
+	getPlatformDisplayEXT: rawptr
+	gl_set_proc_address(getPlatformDisplayEXT, "eglGetPlatformDisplayExt")
+}
 
 init_egl :: proc() {
-	major, minor, count, n, size: i32
+	major, minor, n, size: i32
+	count: i32 = 0
 	configs: []egl.Config
+	egl_conf: egl.Config
 	i: int
 	config_attribs: []i32 = {
 		egl.SURFACE_TYPE,
@@ -24,15 +47,46 @@ init_egl :: proc() {
 	}
 	context_attribs: []i32 = {egl.CONTEXT_CLIENT_VERSION, 2, egl.NONE}
 	egl_display := egl.GetDisplay(egl.DEFAULT_DISPLAY)
-	if (egl_display == egl.NO_DISPLAY) {
-		fmt.println("Can't create egl display\n")
-	} else {
-		fmt.println("Created egl display\n")
-	}
-	if (egl.Initialize(egl_display, &major, &minor)) {
 
-		fmt.println("Can't initialise egl display\n")
+	if (egl_display == egl.NO_DISPLAY) {
+		fmt.println("Can't create egl display")
+	} else {
+		fmt.println("Created egl display")
 	}
+	if (!egl.Initialize(egl_display, nil, nil)) {
+
+		fmt.println("Can't initialise egl display")
+		fmt.printf("Error code: 0x%x\n", GetError())
+	}
+	fmt.printf("EGL major: %d, minor %d\n", major, minor)
+	// GetConfigs() doesn't exist in vendor:egl
+	//egl.GetConfigs(egl_display, nil, 0, &count)
+	//fmt.printf("EGL has %d configs\n", count)
+
+	//     configs = calloc(count, sizeof *configs);
+
+	res := egl.ChooseConfig(egl_display, raw_data(config_attribs), raw_data(configs), count, &n)
+	fmt.printf("%x\n", GetError())
+	if res == egl.FALSE {
+	}
+	fmt.println(res, n)
+
+	for i in 0 ..< n {
+		egl.GetConfigAttrib(egl_display, configs[i], 12320, &size) // 12320 is EGL_BUFFER_SIZE
+		fmt.printf("Buffer size for config %d is %d\n", i, size)
+		egl.GetConfigAttrib(egl_display, configs[i], egl.RED_SIZE, &size)
+		fmt.printf("Red size for config %d is %d\n", i, size)
+
+		// just choose the first one
+		egl_conf = configs[i]
+		break
+	}
+
+	//     egl_context =
+	// 	eglCreateContext(egl_display,
+	// 			 egl_conf,
+	// 			 EGL_NO_CONTEXT, context_attribs);
+
 }
 // init_egl() {
 
