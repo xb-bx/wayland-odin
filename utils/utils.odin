@@ -136,17 +136,21 @@ create_shm_file :: proc() -> posix.FD {
 	return -1
 }
 
-allocate_shm_file :: proc(size: c.int32_t) -> posix.FD {
+allocate_shm_file :: proc(size: uint) -> posix.FD {
 	using posix
 	fd := create_shm_file()
 	if (fd < 0) {
 		return -1
 	}
+
 	ret := posix.result.OK
 	err := get_errno()
-	for ret != result.FAIL && err == Errno.EINTR {
+	for {
 		ret = ftruncate(fd, posix.off_t(size))
 		err = get_errno()
+		if ret == result.OK || err != Errno.EINTR {
+			break
+		}
 	}
 	if (ret != result.OK) {
 		close(fd)

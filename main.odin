@@ -126,7 +126,7 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 	stride := width * 4
 	shm_pool_size := height * stride
 
-	fd := cast(posix.FD)allocate_shm_file(cast(libc.size_t)shm_pool_size)
+	fd := cast(posix.FD)utils.allocate_shm_file(cast(uint)shm_pool_size)
 	if fd < 0 {
 		fmt.println("Errror")
 		return nil
@@ -148,10 +148,8 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 	wl.wl_shm_pool_destroy(pool)
 	posix.close(fd)
 
-	//// This munmap yields segfault, but this is in default documentation
-	///* munmap(pool_data, shm_pool_size); */
-	//// Clear the surface (can't use the memset way for the life of me)
-	//draw(state, pool_data, width, height, stride);
+	// This munmap yields segfault, but this is in default documentation
+	// posix.munmap(pool_data, cast(uint)shm_pool_size)
 	pixels := cast([^]pixel)pool_data
 	for i in 1 ..= shm_pool_size / 4 {
 		pixels[i].a = 255
@@ -161,8 +159,6 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 	}
 
 	wl.wl_buffer_add_listener(buffer, &buffer_listener, nil)
-
-	fmt.println(utils.rand_string(16))
 
 	return buffer
 }
@@ -193,9 +189,6 @@ main :: proc() {
 	wl_callback := wl.wl_surface_frame(state.surface)
 	wl.wl_callback_add_listener(wl_callback, &frame_callback_listener, &state)
 	wl.wl_surface_commit(state.surface)
-
-	//utils.allocate_shm_file(1000)
-	fmt.println(utils.rand_string(16))
 
 	for {wl.display_dispatch(display)}
 }
