@@ -116,48 +116,41 @@ rand_string :: proc(size: uint) -> string {
 	return strings.to_string(sb)
 }
 
-// create_shm_file :: proc() -> posix.FD {
-// 	using posix
-// 	retries := 100
-// 	for {
-// 		name := strings.tofmt.tprintf("/wl-shm-%s", rand_string(16))
-// 		fd := shm_open(
-// 			name,
-// 			{O_Flag_Bits.RDWR, O_Flag_Bits.CREAT, O_Flag_Bits.EXCL},
-// 			{Mode_Bits.IWUSR, Mode_Bits.IRUSR},
-// 		)
-// 		if (fd >= 0) {
-// 			posix.shm_unlink(name)
-// 			return fd
-// 		}
-// 	}
-// 	return 1
-// }
+create_shm_file :: proc() -> posix.FD {
+	using posix
+	for _ in 1 ..= 100 {
+		name := strings.clone_to_cstring(fmt.tprintf("/wl-shm-%s", rand_string(16)))
+		fd := shm_open(
+			name,
+			{O_Flag_Bits.RDWR, O_Flag_Bits.CREAT, O_Flag_Bits.EXCL},
+			{Mode_Bits.IWUSR, Mode_Bits.IRUSR},
+		)
+		if (fd >= 0) {
+			posix.shm_unlink(name)
+			return fd
+		}
+		if get_errno() != Errno.EEXIST {
+			break
+		}
+	}
+	return -1
+}
 
 allocate_shm_file :: proc(size: c.int32_t) -> posix.FD {
 	using posix
-	name: cstring = "/wl_shm-stuff"
-
-	modes: mode_t = {Mode_Bits.IWUSR, Mode_Bits.IRUSR}
-	fmt.println(modes)
-	fd := shm_open(
-		name,
-		{O_Flag_Bits.RDWR, O_Flag_Bits.CREAT, O_Flag_Bits.EXCL},
-		{Mode_Bits.IWUSR, Mode_Bits.IRUSR},
-	)
-
-	if (fd >= 0) {
-		posix.shm_unlink(name)
-	}
+	fd := create_shm_file()
 	if (fd < 0) {
 		return -1
 	}
 	ret := posix.result.OK
 	err := get_errno()
-
 	for ret != result.FAIL && err == Errno.EINTR {
 		ret = ftruncate(fd, posix.off_t(size))
 		err = get_errno()
+	}
+	if (ret != result.OK) {
+		close(fd)
+		return -1
 	}
 
 	return fd
