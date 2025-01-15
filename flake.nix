@@ -31,6 +31,7 @@
           seer
           # odin
           odin_updated
+          libGL
         ];
         shellHook = "zsh";
         name = "odin dev shell";

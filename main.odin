@@ -3,6 +3,7 @@ package main
 import "core:c"
 import "core:c/libc"
 import "core:fmt"
+import "render"
 import "utils"
 import wl "wayland"
 
@@ -164,6 +165,7 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 }
 
 main :: proc() {
+	render.init_egl()
 	state: state = {}
 
 
