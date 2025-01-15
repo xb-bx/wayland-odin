@@ -4,21 +4,14 @@ import "core:c"
 
 foreign import lib "system:wayland-client"
 
-@(default_calling_convention = "c")
+@(default_calling_convention = "c", link_prefix = "wl_")
 foreign lib {
-	@(link_name = "wl_display_connect")
 	display_connect :: proc(_: cstring) -> ^wl_display ---
-	@(link_name = "wl_display_dispatch")
 	display_dispatch :: proc(_: ^wl_display) -> c.int ---
-	@(link_name = "wl_proxy_marshal_flags")
 	proxy_marshal_flags :: proc(_: ^wl_proxy, _: c.uint32_t, _: ^wl_interface, _: c.uint32_t, _: c.uint32_t, #c_vararg _: ..any) -> ^wl_proxy ---
-	@(link_name = "wl_proxy_get_version")
 	proxy_get_version :: proc(_: ^wl_proxy) -> c.uint32_t ---
-	@(link_name = "wl_display_roundtrip")
 	display_roundtrip :: proc(_: ^wl_display) -> c.int ---
-	@(link_name = "wl_proxy_add_listener")
 	proxy_add_listener :: proc(_: ^wl_proxy, _: ^Implementation, _: rawptr) -> c.int ---
-	@(link_name = "wl_proxy_destroy")
 	proxy_destroy :: proc(_: ^wl_proxy) ---
 }
 
