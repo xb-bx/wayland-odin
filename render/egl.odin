@@ -1,5 +1,7 @@
 package render
 
+import wl "../wayland"
+import "core:c"
 import "core:fmt"
 import "vendor:egl"
 
@@ -18,14 +20,61 @@ EGL_BAD_DISPLAY :: 0x3008
 //	attrs.data(),
 //)
 
-// loadGLProc(&m_sProc.eglGetPlatformDisplayEXT, "eglGetPlatformDisplayEXT");
+// // loadGLProc(&m_sProc.eglGetPlatformDisplayEXT, "eglGetPlatformDisplayEXT");
+eglGetPlatformDisplayEXT :: proc "c" (
+	platform: int,
+	native_display: rawptr,
+	attrib_list: [^]c.int,
+) -> egl.Display
+
+EGL_PLATFORM_DEVICE_EXT :: 0x313F
+EGL_PLATFORM_GBM_KHR :: 12759
+
+
 init :: proc() {
 	using egl
-	getPlatformDisplayEXT: rawptr
-	gl_set_proc_address(getPlatformDisplayEXT, "eglGetPlatformDisplayExt")
+
+	major, minor: i32
+	attrib_list: [^]c.int
+	config_attribs: []i32 = {
+		egl.SURFACE_TYPE,
+		egl.SURFACE_TYPE,
+		egl.WINDOW_BIT,
+		egl.RED_SIZE,
+		1,
+		egl.GREEN_SIZE,
+		1,
+		egl.BLUE_SIZE,
+		1,
+		egl.RENDERABLE_TYPE,
+		egl.OPENGL_ES2_BIT,
+		egl.NONE,
+	}
+	configs: [^]egl.Config
+	context_attribs: []i32 = {egl.CONTEXT_CLIENT_VERSION, 2, egl.NONE}
+
+	getdisplay: eglGetPlatformDisplayEXT
+
+	egl.gl_set_proc_address(&getdisplay, "eglGetPlatformDisplayEXT")
+	egl_display := getdisplay(EGL_PLATFORM_GBM_KHR, DEFAULT_DISPLAY, attrib_list)
+	fmt.println(egl_display)
+	if (egl_display == egl.NO_DISPLAY) {
+		fmt.println("Can't create egl display")
+	} else {
+		fmt.println("Created egl display")
+	}
+	if (!egl.Initialize(egl_display, &major, &minor)) {
+		fmt.println("Can't initialise egl display")
+		fmt.printf("Error code: 0x%x\n", GetError())
+	}
+	n: i32 = 0
+	fmt.printf("EGL major: %d, minor %d\n", major, minor)
+	res := egl.ChooseConfig(egl_display, attrib_list, configs, 20, &n)
+	fmt.printf("Num configs : %d\n", n)
+	fmt.println(configs)
 }
 
-init_egl :: proc() {
+init_egl :: proc(display: ^wl.wl_display) {
 	major, minor, n, size: i32
 	count: i32 = 0
 	configs: []egl.Config
@@ -46,7 +95,7 @@ init_egl :: proc() {
 		egl.NONE,
 	}
 	context_attribs: []i32 = {egl.CONTEXT_CLIENT_VERSION, 2, egl.NONE}
-	egl_display := egl.GetDisplay(egl.DEFAULT_DISPLAY)
+	egl_display := egl.GetDisplay(egl.NativeDisplayType(display))
 
 	if (egl_display == egl.NO_DISPLAY) {
 		fmt.println("Can't create egl display")

@@ -165,12 +165,13 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 }
 
 main :: proc() {
-	//render.init_egl()
-	render.init()
+	// render.init()
 	state: state = {}
 
 
 	display := wl.display_connect(nil)
+	// render.init_egl(display)
+	render.init()
 	registry := wl.wl_display_get_registry(display)
 
 
