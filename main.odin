@@ -170,29 +170,28 @@ main :: proc() {
 
 
 	display := wl.display_connect(nil)
-	// render.init_egl(display)
-	render.init()
 	registry := wl.wl_display_get_registry(display)
 
 
 	wl.wl_registry_add_listener(registry, &registry_listener, &state)
-	x := wl.display_roundtrip(display)
+	wl.display_roundtrip(display)
+	render.init_egl(display)
 
-	// fmt.println(x)
+	// // fmt.println(x)
 
-	// Only after first round trip state.compositor is set
-	state.surface = wl.wl_compositor_create_surface(state.compositor)
+	// // Only after first round trip state.compositor is set
+	// state.surface = wl.wl_compositor_create_surface(state.compositor)
 
-	xdg_surface := wl.xdg_wm_base_get_xdg_surface(state.xdg_base, state.surface)
-	wl.xdg_surface_add_listener(xdg_surface, &surface_listener, &state)
+	// xdg_surface := wl.xdg_wm_base_get_xdg_surface(state.xdg_base, state.surface)
+	// wl.xdg_surface_add_listener(xdg_surface, &surface_listener, &state)
 
-	fmt.println(state)
-	toplevel := wl.xdg_surface_get_toplevel(xdg_surface)
-	wl.xdg_toplevel_set_title(toplevel, "Odin Wayland")
+	// fmt.println(state)
+	// toplevel := wl.xdg_surface_get_toplevel(xdg_surface)
+	// wl.xdg_toplevel_set_title(toplevel, "Odin Wayland")
 
-	wl_callback := wl.wl_surface_frame(state.surface)
-	wl.wl_callback_add_listener(wl_callback, &frame_callback_listener, &state)
-	wl.wl_surface_commit(state.surface)
+	// wl_callback := wl.wl_surface_frame(state.surface)
+	// wl.wl_callback_add_listener(wl_callback, &frame_callback_listener, &state)
+	// wl.wl_surface_commit(state.surface)
 
-	for {wl.display_dispatch(display)}
+	// for {wl.display_dispatch(display)}
 }
