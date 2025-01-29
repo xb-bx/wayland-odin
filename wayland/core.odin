@@ -3,6 +3,7 @@ package wayland
 import "core:c"
 
 foreign import lib "system:wayland-client"
+foreign import lib_egl "system:wayland-egl"
 
 @(default_calling_convention = "c", link_prefix = "wl_")
 foreign lib {
@@ -15,6 +16,14 @@ foreign lib {
 	proxy_destroy :: proc(_: ^wl_proxy) ---
 }
 
+@(default_calling_convention = "c", link_prefix = "wl_")
+foreign lib_egl {
+	egl_window_create :: proc(_: ^wl_surface, _: c.int, _: c.int) -> ^egl_window ---
+	egl_window_destroy :: proc(_: ^egl_window) ---
+}
+
+
+egl_window :: struct {}
 // struct wl_map {
 // 	struct wl_array client_entries;
 // 	struct wl_array server_entries;

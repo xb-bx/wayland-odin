@@ -14,6 +14,12 @@ foreign foo {
 	ChooseConfig :: proc(display: egl.Display, attrib_list: ^i32, configs: ^egl.Config, config_size: i32, num_config: ^i32) -> egl.Boolean ---
 }
 
+RenderContext :: struct {
+	display: egl.Display,
+	ctx:     egl.Context,
+	config:  egl.Config,
+}
+
 // EGLBoolean eglGetConfigs( 	EGLDisplay display,
 //   	EGLConfig * configs,
 //   	EGLint config_size,
@@ -38,7 +44,7 @@ EGL_PLATFORM_DEVICE_EXT :: 0x313F
 EGL_PLATFORM_GBM_KHR :: 0x31D7
 EGL_PLATFORM_WAYLAND_KHR :: 0x31D8
 
-init_egl :: proc(display: ^wl.wl_display) {
+init_egl :: proc(display: ^wl.wl_display) -> RenderContext {
 	major, minor, n, size: i32
 	count: i32 = 0
 	configs: [^]egl.Config
@@ -85,6 +91,15 @@ init_egl :: proc(display: ^wl.wl_display) {
 
 	fmt.println(configs)
 	fmt.println(egl_conf)
+
+	egl_context := egl.CreateContext(
+		egl_display,
+		egl_conf,
+		egl.NO_CONTEXT,
+		raw_data(context_attribs),
+	)
+
+
 	//     configs = calloc(count, sizeof *configs);
 
 	//	res := egl.ChooseConfig(egl_display, raw_data(config_attribs), raw_data(configs), count, &n)
@@ -109,6 +124,9 @@ init_egl :: proc(display: ^wl.wl_display) {
 	//	// 			 egl_conf,
 	//	// 			 EGL_NO_CONTEXT, context_attribs);
 
+	fmt.println(egl_context)
+
+	return RenderContext{ctx = egl_context, display = egl_display, config = egl_conf}
 }
 // init_egl() {
 

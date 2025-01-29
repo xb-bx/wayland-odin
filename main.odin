@@ -10,6 +10,8 @@ import wl "wayland"
 import "core:sys/posix"
 
 import "base:runtime"
+import gl "vendor:OpenGL"
+import "vendor:egl"
 
 foreign import lib "lib.o"
 
@@ -106,14 +108,14 @@ frame_callback_listener := wl.wl_callback_listener {
 }
 
 surface_configure :: proc "c" (data: rawptr, surface: ^wl.xdg_surface, serial: c.uint32_t) {
-	context = runtime.default_context()
+	//context = runtime.default_context()
 	state := cast(^state)data
-
-	fmt.println("surface configure")
-	wl.xdg_surface_ack_configure(surface, serial)
-
-	buffer := get_buffer(state, 800, 600)
-	wl.wl_surface_attach(state.surface, buffer, 0, 0)
+	//
+	//fmt.println("surface configure")
+	//wl.xdg_surface_ack_configure(surface, serial)
+	//
+	//buffer := get_buffer(state, 800, 600)
+	//wl.wl_surface_attach(state.surface, buffer, 0, 0)
 	wl.wl_surface_damage(state.surface, 0, 0, c.INT32_MAX, c.INT32_MAX)
 	wl.wl_surface_commit(state.surface)
 }
@@ -164,6 +166,8 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 	return buffer
 }
 
+create_window :: proc() {
+}
 main :: proc() {
 	// render.init()
 	state: state = {}
@@ -175,23 +179,48 @@ main :: proc() {
 
 	wl.wl_registry_add_listener(registry, &registry_listener, &state)
 	wl.display_roundtrip(display)
-	render.init_egl(display)
+	rctx := render.init_egl(display)
+
 
 	// // fmt.println(x)
 
-	// // Only after first round trip state.compositor is set
-	// state.surface = wl.wl_compositor_create_surface(state.compositor)
+	// Only after first round trip state.compositor is set
+	state.surface = wl.wl_compositor_create_surface(state.compositor)
 
-	// xdg_surface := wl.xdg_wm_base_get_xdg_surface(state.xdg_base, state.surface)
-	// wl.xdg_surface_add_listener(xdg_surface, &surface_listener, &state)
+	xdg_surface := wl.xdg_wm_base_get_xdg_surface(state.xdg_base, state.surface)
+	toplevel := wl.xdg_surface_get_toplevel(xdg_surface)
+	wl.xdg_toplevel_set_title(toplevel, "Odin Wayland")
+	wl.wl_surface_commit(state.surface)
+	//wl.xdg_surface_add_listener(xdg_surface, &surface_listener, &state)
 
-	// fmt.println(state)
-	// toplevel := wl.xdg_surface_get_toplevel(xdg_surface)
-	// wl.xdg_toplevel_set_title(toplevel, "Odin Wayland")
+
+	egl_window := wl.egl_window_create(state.surface, 800, 600)
+	egl_surface := egl.CreateWindowSurface(
+		rctx.display,
+		rctx.config,
+		egl.NativeWindowType(egl_window),
+		nil,
+	)
+
+	if egl_surface == egl.NO_SURFACE {
+		fmt.println("Error creating window surface")
+		return
+
+	}
+	if (!egl.MakeCurrent(rctx.display, egl_surface, egl_surface, rctx.ctx)) {
+		fmt.println("Error making current!")
+		return
+	}
+
+	//gl.ClearColor(1.0, 1.0, 1.0, 1.0)
+	//gl.Clear(gl.COLOR_BUFFER_BIT)
+	//gl.Flush()
+	egl.SwapBuffers(rctx.display, egl_surface)
+
 
 	// wl_callback := wl.wl_surface_frame(state.surface)
 	// wl.wl_callback_add_listener(wl_callback, &frame_callback_listener, &state)
 	// wl.wl_surface_commit(state.surface)
 
-	// for {wl.display_dispatch(display)}
+	//for {wl.display_dispatch(display)}
 }
