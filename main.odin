@@ -206,15 +206,18 @@ main :: proc() {
 		return
 	}
 	gl.load_up_to(int(1), 5, egl.gl_set_proc_address)
-	gl.ClearColor(147.0 / 255.0, 204.0 / 255., 234. / 255., 1.0)
-	gl.Clear(gl.COLOR_BUFFER_BIT)
-	gl.Flush()
-	egl.SwapBuffers(rctx.display, egl_surface)
 
 
 	// wl_callback := wl.wl_surface_frame(state.surface)
 	// wl.wl_callback_add_listener(wl_callback, &frame_callback_listener, &state)
 	// wl.wl_surface_commit(state.surface)
 
-	for {wl.display_dispatch(display)}
+	for {
+		gl.ClearColor(147.0 / 255.0, 204.0 / 255., 234. / 255., 1.0)
+		gl.Clear(gl.COLOR_BUFFER_BIT)
+		gl.Flush()
+		egl.SwapBuffers(rctx.display, egl_surface)
+
+		wl.display_dispatch(display)
+	}
 }
