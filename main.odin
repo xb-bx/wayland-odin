@@ -166,34 +166,28 @@ get_buffer :: proc(state: ^state, width: c.int32_t, height: c.int32_t) -> ^wl.wl
 	return buffer
 }
 
-create_window :: proc() {
-}
 main :: proc() {
-	// render.init()
 	state: state = {}
-
 
 	display := wl.display_connect(nil)
 	registry := wl.wl_display_get_registry(display)
 
-
 	wl.wl_registry_add_listener(registry, &registry_listener, &state)
 	wl.display_roundtrip(display)
-	rctx := render.init_egl(display)
 
-
-	// // fmt.println(x)
-
-	// Only after first round trip state.compositor is set
+	//Only after first round trip state.compositor is set
 	state.surface = wl.wl_compositor_create_surface(state.compositor)
 
 	xdg_surface := wl.xdg_wm_base_get_xdg_surface(state.xdg_base, state.surface)
 	toplevel := wl.xdg_surface_get_toplevel(xdg_surface)
 	wl.xdg_toplevel_set_title(toplevel, "Odin Wayland")
-	wl.wl_surface_commit(state.surface)
-	//wl.xdg_surface_add_listener(xdg_surface, &surface_listener, &state)
+
+	wl.wl_surface_commit(state.surface) // This first commit is needed by egl or egl.SwapBuffers() will panic
+	wl.xdg_surface_add_listener(xdg_surface, &surface_listener, &state)
 
 
+	// EGL initialization stuff
+	rctx := render.init_egl(display)
 	egl_window := wl.egl_window_create(state.surface, 800, 600)
 	egl_surface := egl.CreateWindowSurface(
 		rctx.display,
@@ -211,10 +205,10 @@ main :: proc() {
 		fmt.println("Error making current!")
 		return
 	}
-
-	//gl.ClearColor(1.0, 1.0, 1.0, 1.0)
-	//gl.Clear(gl.COLOR_BUFFER_BIT)
-	//gl.Flush()
+	gl.load_up_to(int(1), 5, egl.gl_set_proc_address)
+	gl.ClearColor(147.0 / 255.0, 204.0 / 255., 234. / 255., 1.0)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
+	gl.Flush()
 	egl.SwapBuffers(rctx.display, egl_surface)
 
 
@@ -222,5 +216,5 @@ main :: proc() {
 	// wl.wl_callback_add_listener(wl_callback, &frame_callback_listener, &state)
 	// wl.wl_surface_commit(state.surface)
 
-	//for {wl.display_dispatch(display)}
+	for {wl.display_dispatch(display)}
 }
