@@ -17,7 +17,7 @@ import wl "wayland-odin/wayland"
 If you want to use the scanner, you can do so by running the following command:
 
 ```bash
-odin run wayland/scanner.odin -i <xml-input-file> -o <output-file>
+odin run wayland -i <xml-input-file> -o <output-file>
 ```
 The code will be generated with `package wayland` at the header. PR are accepted to do it otherwise.
 
