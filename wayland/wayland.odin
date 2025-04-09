@@ -57,7 +57,10 @@ wl_display_requests: []wl_message = []wl_message {
 	{"get_registry", "n", raw_data([]^wl_interface{&wl_registry_interface})},
 }
 
-wl_display_events: []wl_message = []wl_message{{"error", "ous", nil}, {"delete_id", "u", nil}}
+wl_display_events: []wl_message = []wl_message {
+	{"error", "ous", raw_data([]^wl_interface{nil, nil, nil})},
+	{"delete_id", "u", raw_data([]^wl_interface{nil})},
+}
 
 wl_display_interface: wl_interface = {}
 @(init)
@@ -65,7 +68,8 @@ init_wl_display_interface :: proc() {
 	wl_display_interface = {"wl_display", 1, 2, &wl_display_requests[0], 2, &wl_display_events[0]}
 }
 
-wl_registry :: struct {}
+wl_registry :: struct {
+}
 wl_registry_listener :: struct {
 	global:        proc "c" (
 		data: rawptr,
@@ -114,8 +118,8 @@ wl_registry_requests: []wl_message = []wl_message {
 }
 
 wl_registry_events: []wl_message = []wl_message {
-	{"global", "usu", nil},
-	{"global_remove", "u", nil},
+	{"global", "usu", raw_data([]^wl_interface{nil, nil, nil})},
+	{"global_remove", "u", raw_data([]^wl_interface{nil})},
 }
 
 wl_registry_interface: wl_interface = {}
@@ -131,7 +135,8 @@ init_wl_registry_interface :: proc() {
 	}
 }
 
-wl_callback :: struct {}
+wl_callback :: struct {
+}
 wl_callback_listener :: struct {
 	done: proc "c" (data: rawptr, wl_callback: ^wl_callback, callback_data: c.uint32_t),
 }
@@ -147,7 +152,7 @@ wl_callback_add_listener :: proc(
 
 wl_callback_requests: []wl_message = []wl_message{}
 
-wl_callback_events: []wl_message = []wl_message{{"done", "u", nil}}
+wl_callback_events: []wl_message = []wl_message{{"done", "u", raw_data([]^wl_interface{nil})}}
 
 wl_callback_interface: wl_interface = {}
 @(init)
@@ -155,8 +160,10 @@ init_wl_callback_interface :: proc() {
 	wl_callback_interface = {"wl_callback", 1, 0, nil, 1, &wl_callback_events[0]}
 }
 
-wl_compositor :: struct {}
-wl_compositor_listener :: struct {}
+wl_compositor :: struct {
+}
+wl_compositor_listener :: struct {
+}
 
 wl_compositor_add_listener :: proc(
 	wl_compositor: ^wl_compositor,
@@ -210,8 +217,10 @@ init_wl_compositor_interface :: proc() {
 	wl_compositor_interface = {"wl_compositor", 6, 2, &wl_compositor_requests[0], 0, nil}
 }
 
-wl_shm_pool :: struct {}
-wl_shm_pool_listener :: struct {}
+wl_shm_pool :: struct {
+}
+wl_shm_pool_listener :: struct {
+}
 
 wl_shm_pool_add_listener :: proc(
 	wl_shm_pool: ^wl_shm_pool,
@@ -290,7 +299,8 @@ init_wl_shm_pool_interface :: proc() {
 	wl_shm_pool_interface = {"wl_shm_pool", 1, 3, &wl_shm_pool_requests[0], 0, nil}
 }
 
-wl_shm :: struct {}
+wl_shm :: struct {
+}
 wl_shm_listener :: struct {
 	format: proc "c" (data: rawptr, wl_shm: ^wl_shm, format: c.uint32_t),
 }
@@ -321,7 +331,7 @@ wl_shm_requests: []wl_message = []wl_message {
 	{"create_pool", "nhi", raw_data([]^wl_interface{&wl_shm_pool_interface, nil, nil})},
 }
 
-wl_shm_events: []wl_message = []wl_message{{"format", "u", nil}}
+wl_shm_events: []wl_message = []wl_message{{"format", "u", raw_data([]^wl_interface{nil})}}
 
 wl_shm_interface: wl_interface = {}
 @(init)
@@ -329,7 +339,8 @@ init_wl_shm_interface :: proc() {
 	wl_shm_interface = {"wl_shm", 1, 1, &wl_shm_requests[0], 1, &wl_shm_events[0]}
 }
 
-wl_buffer :: struct {}
+wl_buffer :: struct {
+}
 wl_buffer_listener :: struct {
 	release: proc "c" (data: rawptr, wl_buffer: ^wl_buffer),
 }
@@ -356,7 +367,7 @@ wl_buffer_destroy :: proc "c" (_wl_buffer: ^wl_buffer) {
 
 wl_buffer_requests: []wl_message = []wl_message{{"destroy", "", raw_data([]^wl_interface{})}}
 
-wl_buffer_events: []wl_message = []wl_message{{"release", "", nil}}
+wl_buffer_events: []wl_message = []wl_message{{"release", "", raw_data([]^wl_interface{})}}
 
 wl_buffer_interface: wl_interface = {}
 @(init)
@@ -364,7 +375,8 @@ init_wl_buffer_interface :: proc() {
 	wl_buffer_interface = {"wl_buffer", 1, 1, &wl_buffer_requests[0], 1, &wl_buffer_events[0]}
 }
 
-wl_data_offer :: struct {}
+wl_data_offer :: struct {
+}
 wl_data_offer_listener :: struct {
 	offer:          proc "c" (data: rawptr, wl_data_offer: ^wl_data_offer, mime_type: cstring),
 	source_actions: proc "c" (
@@ -466,9 +478,9 @@ wl_data_offer_requests: []wl_message = []wl_message {
 }
 
 wl_data_offer_events: []wl_message = []wl_message {
-	{"offer", "s", nil},
-	{"source_actions", "u", nil},
-	{"action", "u", nil},
+	{"offer", "s", raw_data([]^wl_interface{nil})},
+	{"source_actions", "u", raw_data([]^wl_interface{nil})},
+	{"action", "u", raw_data([]^wl_interface{nil})},
 }
 
 wl_data_offer_interface: wl_interface = {}
@@ -484,7 +496,8 @@ init_wl_data_offer_interface :: proc() {
 	}
 }
 
-wl_data_source :: struct {}
+wl_data_source :: struct {
+}
 wl_data_source_listener :: struct {
 	target:             proc "c" (
 		data: rawptr,
@@ -561,12 +574,12 @@ wl_data_source_requests: []wl_message = []wl_message {
 }
 
 wl_data_source_events: []wl_message = []wl_message {
-	{"target", "?s", nil},
-	{"send", "sh", nil},
-	{"cancelled", "", nil},
-	{"dnd_drop_performed", "", nil},
-	{"dnd_finished", "", nil},
-	{"action", "u", nil},
+	{"target", "?s", raw_data([]^wl_interface{nil})},
+	{"send", "sh", raw_data([]^wl_interface{nil, nil})},
+	{"cancelled", "", raw_data([]^wl_interface{})},
+	{"dnd_drop_performed", "", raw_data([]^wl_interface{})},
+	{"dnd_finished", "", raw_data([]^wl_interface{})},
+	{"action", "u", raw_data([]^wl_interface{nil})},
 }
 
 wl_data_source_interface: wl_interface = {}
@@ -582,7 +595,8 @@ init_wl_data_source_interface :: proc() {
 	}
 }
 
-wl_data_device :: struct {}
+wl_data_device :: struct {
+}
 wl_data_device_listener :: struct {
 	data_offer: proc "c" (data: rawptr, wl_data_device: ^wl_data_device, id: c.uint32_t),
 	enter:      proc "c" (
@@ -682,12 +696,16 @@ wl_data_device_requests: []wl_message = []wl_message {
 }
 
 wl_data_device_events: []wl_message = []wl_message {
-	{"data_offer", "n", nil},
-	{"enter", "uoff?o", nil},
-	{"leave", "", nil},
-	{"motion", "uff", nil},
-	{"drop", "", nil},
-	{"selection", "?o", nil},
+	{"data_offer", "n", raw_data([]^wl_interface{&wl_data_offer_interface})},
+	{
+		"enter",
+		"uoff?o",
+		raw_data([]^wl_interface{nil, &wl_surface_interface, nil, nil, &wl_data_offer_interface}),
+	},
+	{"leave", "", raw_data([]^wl_interface{})},
+	{"motion", "uff", raw_data([]^wl_interface{nil, nil, nil})},
+	{"drop", "", raw_data([]^wl_interface{})},
+	{"selection", "?o", raw_data([]^wl_interface{&wl_data_offer_interface})},
 }
 
 wl_data_device_interface: wl_interface = {}
@@ -703,8 +721,10 @@ init_wl_data_device_interface :: proc() {
 	}
 }
 
-wl_data_device_manager :: struct {}
-wl_data_device_manager_listener :: struct {}
+wl_data_device_manager :: struct {
+}
+wl_data_device_manager_listener :: struct {
+}
 
 wl_data_device_manager_add_listener :: proc(
 	wl_data_device_manager: ^wl_data_device_manager,
@@ -779,8 +799,10 @@ init_wl_data_device_manager_interface :: proc() {
 	}
 }
 
-wl_shell :: struct {}
-wl_shell_listener :: struct {}
+wl_shell :: struct {
+}
+wl_shell_listener :: struct {
+}
 
 wl_shell_add_listener :: proc(
 	wl_shell: ^wl_shell,
@@ -826,7 +848,8 @@ init_wl_shell_interface :: proc() {
 	wl_shell_interface = {"wl_shell", 1, 1, &wl_shell_requests[0], 0, nil}
 }
 
-wl_shell_surface :: struct {}
+wl_shell_surface :: struct {
+}
 wl_shell_surface_listener :: struct {
 	ping:       proc "c" (data: rawptr, wl_shell_surface: ^wl_shell_surface, serial: c.uint32_t),
 	configure:  proc "c" (
@@ -1029,9 +1052,9 @@ wl_shell_surface_requests: []wl_message = []wl_message {
 }
 
 wl_shell_surface_events: []wl_message = []wl_message {
-	{"ping", "u", nil},
-	{"configure", "uii", nil},
-	{"popup_done", "", nil},
+	{"ping", "u", raw_data([]^wl_interface{nil})},
+	{"configure", "uii", raw_data([]^wl_interface{nil, nil, nil})},
+	{"popup_done", "", raw_data([]^wl_interface{})},
 }
 
 wl_shell_surface_interface: wl_interface = {}
@@ -1047,7 +1070,8 @@ init_wl_shell_surface_interface :: proc() {
 	}
 }
 
-wl_surface :: struct {}
+wl_surface :: struct {
+}
 wl_surface_listener :: struct {
 	enter:                      proc "c" (
 		data: rawptr,
@@ -1254,10 +1278,10 @@ wl_surface_requests: []wl_message = []wl_message {
 }
 
 wl_surface_events: []wl_message = []wl_message {
-	{"enter", "o", nil},
-	{"leave", "o", nil},
-	{"preferred_buffer_scale", "i", nil},
-	{"preferred_buffer_transform", "u", nil},
+	{"enter", "o", raw_data([]^wl_interface{&wl_output_interface})},
+	{"leave", "o", raw_data([]^wl_interface{&wl_output_interface})},
+	{"preferred_buffer_scale", "i", raw_data([]^wl_interface{nil})},
+	{"preferred_buffer_transform", "u", raw_data([]^wl_interface{nil})},
 }
 
 wl_surface_interface: wl_interface = {}
@@ -1266,7 +1290,8 @@ init_wl_surface_interface :: proc() {
 	wl_surface_interface = {"wl_surface", 6, 11, &wl_surface_requests[0], 4, &wl_surface_events[0]}
 }
 
-wl_seat :: struct {}
+wl_seat :: struct {
+}
 wl_seat_listener :: struct {
 	capabilities: proc "c" (data: rawptr, wl_seat: ^wl_seat, capabilities: c.uint32_t),
 	name:         proc "c" (data: rawptr, wl_seat: ^wl_seat, name: cstring),
@@ -1344,7 +1369,10 @@ wl_seat_requests: []wl_message = []wl_message {
 	{"release", "", raw_data([]^wl_interface{})},
 }
 
-wl_seat_events: []wl_message = []wl_message{{"capabilities", "u", nil}, {"name", "s", nil}}
+wl_seat_events: []wl_message = []wl_message {
+	{"capabilities", "u", raw_data([]^wl_interface{nil})},
+	{"name", "s", raw_data([]^wl_interface{nil})},
+}
 
 wl_seat_interface: wl_interface = {}
 @(init)
@@ -1352,7 +1380,8 @@ init_wl_seat_interface :: proc() {
 	wl_seat_interface = {"wl_seat", 9, 4, &wl_seat_requests[0], 2, &wl_seat_events[0]}
 }
 
-wl_pointer :: struct {}
+wl_pointer :: struct {
+}
 wl_pointer_listener :: struct {
 	enter:                   proc "c" (
 		data: rawptr,
@@ -1469,17 +1498,17 @@ wl_pointer_requests: []wl_message = []wl_message {
 }
 
 wl_pointer_events: []wl_message = []wl_message {
-	{"enter", "uoff", nil},
-	{"leave", "uo", nil},
-	{"motion", "uff", nil},
-	{"button", "uuuu", nil},
-	{"axis", "uuf", nil},
-	{"frame", "", nil},
-	{"axis_source", "u", nil},
-	{"axis_stop", "uu", nil},
-	{"axis_discrete", "ui", nil},
-	{"axis_value120", "ui", nil},
-	{"axis_relative_direction", "uu", nil},
+	{"enter", "uoff", raw_data([]^wl_interface{nil, &wl_surface_interface, nil, nil})},
+	{"leave", "uo", raw_data([]^wl_interface{nil, &wl_surface_interface})},
+	{"motion", "uff", raw_data([]^wl_interface{nil, nil, nil})},
+	{"button", "uuuu", raw_data([]^wl_interface{nil, nil, nil, nil})},
+	{"axis", "uuf", raw_data([]^wl_interface{nil, nil, nil})},
+	{"frame", "", raw_data([]^wl_interface{})},
+	{"axis_source", "u", raw_data([]^wl_interface{nil})},
+	{"axis_stop", "uu", raw_data([]^wl_interface{nil, nil})},
+	{"axis_discrete", "ui", raw_data([]^wl_interface{nil, nil})},
+	{"axis_value120", "ui", raw_data([]^wl_interface{nil, nil})},
+	{"axis_relative_direction", "uu", raw_data([]^wl_interface{nil, nil})},
 }
 
 wl_pointer_interface: wl_interface = {}
@@ -1488,7 +1517,8 @@ init_wl_pointer_interface :: proc() {
 	wl_pointer_interface = {"wl_pointer", 9, 2, &wl_pointer_requests[0], 11, &wl_pointer_events[0]}
 }
 
-wl_keyboard :: struct {}
+wl_keyboard :: struct {
+}
 wl_keyboard_listener :: struct {
 	keymap:      proc "c" (
 		data: rawptr,
@@ -1558,12 +1588,12 @@ wl_keyboard_release :: proc "c" (_wl_keyboard: ^wl_keyboard) {
 wl_keyboard_requests: []wl_message = []wl_message{{"release", "", raw_data([]^wl_interface{})}}
 
 wl_keyboard_events: []wl_message = []wl_message {
-	{"keymap", "uhu", nil},
-	{"enter", "uoa", nil},
-	{"leave", "uo", nil},
-	{"key", "uuuu", nil},
-	{"modifiers", "uuuuu", nil},
-	{"repeat_info", "ii", nil},
+	{"keymap", "uhu", raw_data([]^wl_interface{nil, nil, nil})},
+	{"enter", "uoa", raw_data([]^wl_interface{nil, &wl_surface_interface, nil})},
+	{"leave", "uo", raw_data([]^wl_interface{nil, &wl_surface_interface})},
+	{"key", "uuuu", raw_data([]^wl_interface{nil, nil, nil, nil})},
+	{"modifiers", "uuuuu", raw_data([]^wl_interface{nil, nil, nil, nil, nil})},
+	{"repeat_info", "ii", raw_data([]^wl_interface{nil, nil})},
 }
 
 wl_keyboard_interface: wl_interface = {}
@@ -1579,7 +1609,8 @@ init_wl_keyboard_interface :: proc() {
 	}
 }
 
-wl_touch :: struct {}
+wl_touch :: struct {
+}
 wl_touch_listener :: struct {
 	down:        proc "c" (
 		data: rawptr,
@@ -1646,13 +1677,13 @@ wl_touch_release :: proc "c" (_wl_touch: ^wl_touch) {
 wl_touch_requests: []wl_message = []wl_message{{"release", "", raw_data([]^wl_interface{})}}
 
 wl_touch_events: []wl_message = []wl_message {
-	{"down", "uuoiff", nil},
-	{"up", "uui", nil},
-	{"motion", "uiff", nil},
-	{"frame", "", nil},
-	{"cancel", "", nil},
-	{"shape", "iff", nil},
-	{"orientation", "if", nil},
+	{"down", "uuoiff", raw_data([]^wl_interface{nil, nil, &wl_surface_interface, nil, nil, nil})},
+	{"up", "uui", raw_data([]^wl_interface{nil, nil, nil})},
+	{"motion", "uiff", raw_data([]^wl_interface{nil, nil, nil, nil})},
+	{"frame", "", raw_data([]^wl_interface{})},
+	{"cancel", "", raw_data([]^wl_interface{})},
+	{"shape", "iff", raw_data([]^wl_interface{nil, nil, nil})},
+	{"orientation", "if", raw_data([]^wl_interface{nil, nil})},
 }
 
 wl_touch_interface: wl_interface = {}
@@ -1661,7 +1692,8 @@ init_wl_touch_interface :: proc() {
 	wl_touch_interface = {"wl_touch", 9, 1, &wl_touch_requests[0], 7, &wl_touch_events[0]}
 }
 
-wl_output :: struct {}
+wl_output :: struct {
+}
 wl_output_listener :: struct {
 	geometry:    proc "c" (
 		data: rawptr,
@@ -1712,12 +1744,12 @@ wl_output_release :: proc "c" (_wl_output: ^wl_output) {
 wl_output_requests: []wl_message = []wl_message{{"release", "", raw_data([]^wl_interface{})}}
 
 wl_output_events: []wl_message = []wl_message {
-	{"geometry", "iiiiissi", nil},
-	{"mode", "uiii", nil},
-	{"done", "", nil},
-	{"scale", "i", nil},
-	{"name", "s", nil},
-	{"description", "s", nil},
+	{"geometry", "iiiiissi", raw_data([]^wl_interface{nil, nil, nil, nil, nil, nil, nil, nil})},
+	{"mode", "uiii", raw_data([]^wl_interface{nil, nil, nil, nil})},
+	{"done", "", raw_data([]^wl_interface{})},
+	{"scale", "i", raw_data([]^wl_interface{nil})},
+	{"name", "s", raw_data([]^wl_interface{nil})},
+	{"description", "s", raw_data([]^wl_interface{nil})},
 }
 
 wl_output_interface: wl_interface = {}
@@ -1726,8 +1758,10 @@ init_wl_output_interface :: proc() {
 	wl_output_interface = {"wl_output", 4, 1, &wl_output_requests[0], 6, &wl_output_events[0]}
 }
 
-wl_region :: struct {}
-wl_region_listener :: struct {}
+wl_region :: struct {
+}
+wl_region_listener :: struct {
+}
 
 wl_region_add_listener :: proc(
 	wl_region: ^wl_region,
@@ -1805,8 +1839,10 @@ init_wl_region_interface :: proc() {
 	wl_region_interface = {"wl_region", 1, 3, &wl_region_requests[0], 0, nil}
 }
 
-wl_subcompositor :: struct {}
-wl_subcompositor_listener :: struct {}
+wl_subcompositor :: struct {
+}
+wl_subcompositor_listener :: struct {
+}
 
 wl_subcompositor_add_listener :: proc(
 	wl_subcompositor: ^wl_subcompositor,
@@ -1872,8 +1908,10 @@ init_wl_subcompositor_interface :: proc() {
 	wl_subcompositor_interface = {"wl_subcompositor", 1, 2, &wl_subcompositor_requests[0], 0, nil}
 }
 
-wl_subsurface :: struct {}
-wl_subsurface_listener :: struct {}
+wl_subsurface :: struct {
+}
+wl_subsurface_listener :: struct {
+}
 
 wl_subsurface_add_listener :: proc(
 	wl_subsurface: ^wl_subsurface,

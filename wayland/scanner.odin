@@ -429,9 +429,22 @@ emit_requests_message :: proc(out: os.Handle, request: Request) {
 }
 
 emit_events_message :: proc(out: os.Handle, event: Event) {
+	ret: ^Arg = nil
+
+	type_arr: [dynamic]string = {}
+
+	// Generate type interfaces
+	for arg in event.args {
+		if arg.interface != "" {
+			append(&type_arr, fmt.tprintf("&%s_interface", arg.interface))
+		} else {
+			append(&type_arr, fmt.tprintf("nil"))
+		}
+	}
+
 	fmt.fprintf(out, "\t{{ \"%s\", \"", event.name)
 	fmt.fprintf(out, "%s", emit_args_string(event.args))
-	fmt.fprintf(out, "\", nil }},\n")
+	fmt.fprintf(out, "\", raw_data([]^wl_interface{{%s}}) }},\n", strings.join(type_arr[:], ", "))
 }
 
 emit_private_code :: proc(out: os.Handle, interface: Interface) {

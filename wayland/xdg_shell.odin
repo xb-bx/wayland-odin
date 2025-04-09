@@ -64,7 +64,7 @@ xdg_wm_base_requests: []wl_message = []wl_message{
 }
 
 xdg_wm_base_events: []wl_message = []wl_message{
-	{ "ping", "u", nil },
+	{ "ping", "u", raw_data([]^wl_interface{nil}) },
 }
 
 xdg_wm_base_interface: wl_interface = {}
@@ -273,7 +273,7 @@ xdg_surface_requests: []wl_message = []wl_message{
 }
 
 xdg_surface_events: []wl_message = []wl_message{
-	{ "configure", "u", nil },
+	{ "configure", "u", raw_data([]^wl_interface{nil}) },
 }
 
 xdg_surface_interface: wl_interface = {}
@@ -454,10 +454,10 @@ xdg_toplevel_requests: []wl_message = []wl_message{
 }
 
 xdg_toplevel_events: []wl_message = []wl_message{
-	{ "configure", "iia", nil },
-	{ "close", "", nil },
-	{ "configure_bounds", "ii", nil },
-	{ "wm_capabilities", "a", nil },
+	{ "configure", "iia", raw_data([]^wl_interface{nil, nil, nil}) },
+	{ "close", "", raw_data([]^wl_interface{}) },
+	{ "configure_bounds", "ii", raw_data([]^wl_interface{nil, nil}) },
+	{ "wm_capabilities", "a", raw_data([]^wl_interface{nil}) },
 }
 
 xdg_toplevel_interface: wl_interface = {}
@@ -534,9 +534,9 @@ xdg_popup_requests: []wl_message = []wl_message{
 }
 
 xdg_popup_events: []wl_message = []wl_message{
-	{ "configure", "iiii", nil },
-	{ "popup_done", "", nil },
-	{ "repositioned", "u", nil },
+	{ "configure", "iiii", raw_data([]^wl_interface{nil, nil, nil, nil}) },
+	{ "popup_done", "", raw_data([]^wl_interface{}) },
+	{ "repositioned", "u", raw_data([]^wl_interface{nil}) },
 }
 
 xdg_popup_interface: wl_interface = {}
