@@ -15,7 +15,7 @@ zwlr_layer_shell_v1_add_listener :: proc(
     return proxy_add_listener(cast(^wl_proxy)zwlr_layer_shell_v1, cast(^Implementation)listener, data)
 };
 
-zwlr_layer_shell_v1_get_layer_surface :: proc "c" (_zwlr_layer_shell_v1: ^zwlr_layer_shell_v1,surface : ^wl_surface,output : ^wl_output,layer : zwlr_layer_shell_v1_layer,namespace : cstring)-> ^zwlr_layer_surface_v1 {
+zwlr_layer_shell_v1_get_layer_surface :: proc "c" (_zwlr_layer_shell_v1: ^zwlr_layer_shell_v1,surface : ^wl_surface,output : ^wl_output,layer : c.uint32_t,namespace : cstring)-> ^zwlr_layer_surface_v1 {
 	id: ^wl_proxy
 	id = proxy_marshal_flags(
                 cast(^wl_proxy)_zwlr_layer_shell_v1,
@@ -54,18 +54,13 @@ init_zwlr_layer_shell_v1_interface :: proc() {
 	}
 }
 
-zwlr_layer_shell_v1_error :: enum {
-	ALREADY_CONSTRUCTED = 2,
-	ROLE = 0,
-	INVALID_LAYER = 1,
-}
-
-zwlr_layer_shell_v1_layer :: enum {
-	OVERLAY = 3,
-	BOTTOM = 1,
-	TOP = 2,
-	BACKGROUND = 0,
-}
+ZWLR_LAYER_SHELL_V1_ERROR_ALREADY_CONSTRUCTED :: 2
+ZWLR_LAYER_SHELL_V1_ERROR_ROLE :: 0
+ZWLR_LAYER_SHELL_V1_ERROR_INVALID_LAYER :: 1
+ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY :: 3
+ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM :: 1
+ZWLR_LAYER_SHELL_V1_LAYER_TOP :: 2
+ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND :: 0
 
 zwlr_layer_surface_v1 :: struct {}
 zwlr_layer_surface_v1_listener :: struct {
@@ -99,7 +94,7 @@ proxy_marshal_flags(
 
 }
 
-zwlr_layer_surface_v1_set_anchor :: proc "c" (_zwlr_layer_surface_v1: ^zwlr_layer_surface_v1,anchor : zwlr_layer_surface_v1_anchor)
+zwlr_layer_surface_v1_set_anchor :: proc "c" (_zwlr_layer_surface_v1: ^zwlr_layer_surface_v1,anchor : c.uint32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_zwlr_layer_surface_v1,
@@ -123,7 +118,7 @@ proxy_marshal_flags(
 
 }
 
-zwlr_layer_surface_v1_set_keyboard_interactivity :: proc "c" (_zwlr_layer_surface_v1: ^zwlr_layer_surface_v1,keyboard_interactivity : zwlr_layer_surface_v1_keyboard_interactivity)
+zwlr_layer_surface_v1_set_keyboard_interactivity :: proc "c" (_zwlr_layer_surface_v1: ^zwlr_layer_surface_v1,keyboard_interactivity : c.uint32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_zwlr_layer_surface_v1,
@@ -155,7 +150,7 @@ proxy_marshal_flags(
 
 }
 
-zwlr_layer_surface_v1_set_layer :: proc "c" (_zwlr_layer_surface_v1: ^zwlr_layer_surface_v1,layer : zwlr_layer_shell_v1_layer)
+zwlr_layer_surface_v1_set_layer :: proc "c" (_zwlr_layer_surface_v1: ^zwlr_layer_surface_v1,layer : c.uint32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_zwlr_layer_surface_v1,
@@ -163,7 +158,7 @@ proxy_marshal_flags(
 
 }
 
-zwlr_layer_surface_v1_set_exclusive_edge :: proc "c" (_zwlr_layer_surface_v1: ^zwlr_layer_surface_v1,edge : zwlr_layer_surface_v1_anchor)
+zwlr_layer_surface_v1_set_exclusive_edge :: proc "c" (_zwlr_layer_surface_v1: ^zwlr_layer_surface_v1,edge : c.uint32_t)
 {
 proxy_marshal_flags(
                 cast(^wl_proxy)_zwlr_layer_surface_v1,
@@ -202,24 +197,16 @@ init_zwlr_layer_surface_v1_interface :: proc() {
 	}
 }
 
-zwlr_layer_surface_v1_keyboard_interactivity :: enum {
-	EXCLUSIVE = 1,
-	ON_DEMAND = 2,
-	NONE = 0,
-}
-
-zwlr_layer_surface_v1_error :: enum {
-	INVALID_ANCHOR = 2,
-	INVALID_SURFACE_STATE = 0,
-	INVALID_KEYBOARD_INTERACTIVITY = 3,
-	INVALID_EXCLUSIVE_EDGE = 4,
-	INVALID_SIZE = 1,
-}
-
-zwlr_layer_surface_v1_anchor :: enum {
-	TOP = 1,
-	LEFT = 4,
-	RIGHT = 8,
-	BOTTOM = 2,
-}
+ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_EXCLUSIVE :: 1
+ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_ON_DEMAND :: 2
+ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_NONE :: 0
+ZWLR_LAYER_SURFACE_V1_ERROR_INVALID_ANCHOR :: 2
+ZWLR_LAYER_SURFACE_V1_ERROR_INVALID_SURFACE_STATE :: 0
+ZWLR_LAYER_SURFACE_V1_ERROR_INVALID_KEYBOARD_INTERACTIVITY :: 3
+ZWLR_LAYER_SURFACE_V1_ERROR_INVALID_EXCLUSIVE_EDGE :: 4
+ZWLR_LAYER_SURFACE_V1_ERROR_INVALID_SIZE :: 1
+ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP :: 1
+ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT :: 4
+ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT :: 8
+ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM :: 2
 
