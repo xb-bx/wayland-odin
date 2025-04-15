@@ -68,8 +68,12 @@ init_wl_display_interface :: proc() {
 	wl_display_interface = {"wl_display", 1, 2, &wl_display_requests[0], 2, &wl_display_events[0]}
 }
 
-wl_registry :: struct {
-}
+WL_DISPLAY_ERROR_IMPLEMENTATION :: 3
+WL_DISPLAY_ERROR_INVALID_METHOD :: 1
+WL_DISPLAY_ERROR_NO_MEMORY :: 2
+WL_DISPLAY_ERROR_INVALID_OBJECT :: 0
+
+wl_registry :: struct {}
 wl_registry_listener :: struct {
 	global:        proc "c" (
 		data: rawptr,
@@ -113,6 +117,11 @@ wl_registry_bind :: proc "c" (
 	return cast(rawptr)id
 }
 
+
+wl_registry_destroy :: proc "c" (wl_registry: ^wl_registry) {
+	proxy_destroy(cast(^wl_proxy)wl_registry)
+}
+
 wl_registry_requests: []wl_message = []wl_message {
 	{"bind", "usun", raw_data([]^wl_interface{nil, nil})},
 }
@@ -135,8 +144,8 @@ init_wl_registry_interface :: proc() {
 	}
 }
 
-wl_callback :: struct {
-}
+
+wl_callback :: struct {}
 wl_callback_listener :: struct {
 	done: proc "c" (data: rawptr, wl_callback: ^wl_callback, callback_data: c.uint32_t),
 }
@@ -150,6 +159,11 @@ wl_callback_add_listener :: proc(
 	return proxy_add_listener(cast(^wl_proxy)wl_callback, cast(^Implementation)listener, data)
 }
 
+
+wl_callback_destroy :: proc "c" (wl_callback: ^wl_callback) {
+	proxy_destroy(cast(^wl_proxy)wl_callback)
+}
+
 wl_callback_requests: []wl_message = []wl_message{}
 
 wl_callback_events: []wl_message = []wl_message{{"done", "u", raw_data([]^wl_interface{nil})}}
@@ -160,10 +174,9 @@ init_wl_callback_interface :: proc() {
 	wl_callback_interface = {"wl_callback", 1, 0, nil, 1, &wl_callback_events[0]}
 }
 
-wl_compositor :: struct {
-}
-wl_compositor_listener :: struct {
-}
+
+wl_compositor :: struct {}
+wl_compositor_listener :: struct {}
 
 wl_compositor_add_listener :: proc(
 	wl_compositor: ^wl_compositor,
@@ -204,6 +217,11 @@ wl_compositor_create_region :: proc "c" (_wl_compositor: ^wl_compositor) -> ^wl_
 	return cast(^wl_region)id
 }
 
+
+wl_compositor_destroy :: proc "c" (wl_compositor: ^wl_compositor) {
+	proxy_destroy(cast(^wl_proxy)wl_compositor)
+}
+
 wl_compositor_requests: []wl_message = []wl_message {
 	{"create_surface", "n", raw_data([]^wl_interface{&wl_surface_interface})},
 	{"create_region", "n", raw_data([]^wl_interface{&wl_region_interface})},
@@ -217,10 +235,9 @@ init_wl_compositor_interface :: proc() {
 	wl_compositor_interface = {"wl_compositor", 6, 2, &wl_compositor_requests[0], 0, nil}
 }
 
-wl_shm_pool :: struct {
-}
-wl_shm_pool_listener :: struct {
-}
+
+wl_shm_pool :: struct {}
+wl_shm_pool_listener :: struct {}
 
 wl_shm_pool_add_listener :: proc(
 	wl_shm_pool: ^wl_shm_pool,
@@ -299,8 +316,8 @@ init_wl_shm_pool_interface :: proc() {
 	wl_shm_pool_interface = {"wl_shm_pool", 1, 3, &wl_shm_pool_requests[0], 0, nil}
 }
 
-wl_shm :: struct {
-}
+
+wl_shm :: struct {}
 wl_shm_listener :: struct {
 	format: proc "c" (data: rawptr, wl_shm: ^wl_shm, format: c.uint32_t),
 }
@@ -327,6 +344,11 @@ wl_shm_create_pool :: proc "c" (_wl_shm: ^wl_shm, fd: c.int32_t, size: c.int32_t
 	return cast(^wl_shm_pool)id
 }
 
+
+wl_shm_destroy :: proc "c" (wl_shm: ^wl_shm) {
+	proxy_destroy(cast(^wl_proxy)wl_shm)
+}
+
 wl_shm_requests: []wl_message = []wl_message {
 	{"create_pool", "nhi", raw_data([]^wl_interface{&wl_shm_pool_interface, nil, nil})},
 }
@@ -339,8 +361,119 @@ init_wl_shm_interface :: proc() {
 	wl_shm_interface = {"wl_shm", 1, 1, &wl_shm_requests[0], 1, &wl_shm_events[0]}
 }
 
-wl_buffer :: struct {
-}
+WL_SHM_ERROR_INVALID_STRIDE :: 1
+WL_SHM_ERROR_INVALID_FD :: 2
+WL_SHM_ERROR_INVALID_FORMAT :: 0
+WL_SHM_FORMAT_ABGR1555 :: 0x35314241
+WL_SHM_FORMAT_XRGB8888 :: 1
+WL_SHM_FORMAT_YVYU :: 0x55595659
+WL_SHM_FORMAT_Y0L2 :: 0x324c3059
+WL_SHM_FORMAT_BGRA1010102 :: 0x30334142
+WL_SHM_FORMAT_RGBX5551 :: 0x35315852
+WL_SHM_FORMAT_BGRA5551 :: 0x35314142
+WL_SHM_FORMAT_BGR888 :: 0x34324742
+WL_SHM_FORMAT_R8 :: 0x20203852
+WL_SHM_FORMAT_RGB565 :: 0x36314752
+WL_SHM_FORMAT_XBGR4444 :: 0x32314258
+WL_SHM_FORMAT_ABGR16161616F :: 0x48344241
+WL_SHM_FORMAT_RGBX1010102 :: 0x30335852
+WL_SHM_FORMAT_XRGB16161616F :: 0x48345258
+WL_SHM_FORMAT_YVU420 :: 0x32315659
+WL_SHM_FORMAT_Y416 :: 0x36313459
+WL_SHM_FORMAT_YUV411 :: 0x31315559
+WL_SHM_FORMAT_BGR233 :: 0x38524742
+WL_SHM_FORMAT_XBGR8888 :: 0x34324258
+WL_SHM_FORMAT_NV15 :: 0x3531564e
+WL_SHM_FORMAT_BGRX5551 :: 0x35315842
+WL_SHM_FORMAT_AXBXGXRX106106106106 :: 0x30314241
+WL_SHM_FORMAT_XVYU2101010 :: 0x30335658
+WL_SHM_FORMAT_AYUV :: 0x56555941
+WL_SHM_FORMAT_ABGR2101010 :: 0x30334241
+WL_SHM_FORMAT_ARGB4444 :: 0x32315241
+WL_SHM_FORMAT_BGRX1010102 :: 0x30335842
+WL_SHM_FORMAT_YVU410 :: 0x39555659
+WL_SHM_FORMAT_RGBX4444 :: 0x32315852
+WL_SHM_FORMAT_ARGB16161616 :: 0x38345241
+WL_SHM_FORMAT_NV42 :: 0x3234564e
+WL_SHM_FORMAT_NV12 :: 0x3231564e
+WL_SHM_FORMAT_ARGB1555 :: 0x35315241
+WL_SHM_FORMAT_Q401 :: 0x31303451
+WL_SHM_FORMAT_YUYV :: 0x56595559
+WL_SHM_FORMAT_P016 :: 0x36313050
+WL_SHM_FORMAT_XRGB2101010 :: 0x30335258
+WL_SHM_FORMAT_RGBA8888 :: 0x34324152
+WL_SHM_FORMAT_ARGB16161616F :: 0x48345241
+WL_SHM_FORMAT_XBGR8888_A8 :: 0x38414258
+WL_SHM_FORMAT_UYVY :: 0x59565955
+WL_SHM_FORMAT_YUV420_10BIT :: 0x30315559
+WL_SHM_FORMAT_BGRX4444 :: 0x32315842
+WL_SHM_FORMAT_YUV420 :: 0x32315559
+WL_SHM_FORMAT_C8 :: 0x20203843
+WL_SHM_FORMAT_Y212 :: 0x32313259
+WL_SHM_FORMAT_RGBA1010102 :: 0x30334152
+WL_SHM_FORMAT_BGR888_A8 :: 0x38413842
+WL_SHM_FORMAT_XRGB16161616 :: 0x38345258
+WL_SHM_FORMAT_Q410 :: 0x30313451
+WL_SHM_FORMAT_X0L0 :: 0x304c3058
+WL_SHM_FORMAT_Y0L0 :: 0x304c3059
+WL_SHM_FORMAT_BGRA8888 :: 0x34324142
+WL_SHM_FORMAT_RGBA5551 :: 0x35314152
+WL_SHM_FORMAT_ABGR8888 :: 0x34324241
+WL_SHM_FORMAT_RG88 :: 0x38384752
+WL_SHM_FORMAT_NV16 :: 0x3631564e
+WL_SHM_FORMAT_RGBX8888_A8 :: 0x38415852
+WL_SHM_FORMAT_XRGB8888_A8 :: 0x38415258
+WL_SHM_FORMAT_GR88 :: 0x38385247
+WL_SHM_FORMAT_P012 :: 0x32313050
+WL_SHM_FORMAT_YVU422 :: 0x36315659
+WL_SHM_FORMAT_YVU411 :: 0x31315659
+WL_SHM_FORMAT_Y410 :: 0x30313459
+WL_SHM_FORMAT_BGRX8888 :: 0x34325842
+WL_SHM_FORMAT_RGB888_A8 :: 0x38413852
+WL_SHM_FORMAT_XBGR16161616 :: 0x38344258
+WL_SHM_FORMAT_Y216 :: 0x36313259
+WL_SHM_FORMAT_XVYU16161616 :: 0x38345658
+WL_SHM_FORMAT_VYUY :: 0x59555956
+WL_SHM_FORMAT_P210 :: 0x30313250
+WL_SHM_FORMAT_NV61 :: 0x3136564e
+WL_SHM_FORMAT_YVU444 :: 0x34325659
+WL_SHM_FORMAT_VUY888 :: 0x34325556
+WL_SHM_FORMAT_ARGB8888 :: 0
+WL_SHM_FORMAT_BGR565 :: 0x36314742
+WL_SHM_FORMAT_XBGR16161616F :: 0x48344258
+WL_SHM_FORMAT_XVYU12_16161616 :: 0x36335658
+WL_SHM_FORMAT_YUV444 :: 0x34325559
+WL_SHM_FORMAT_Y210 :: 0x30313259
+WL_SHM_FORMAT_BGR565_A8 :: 0x38413542
+WL_SHM_FORMAT_VUY101010 :: 0x30335556
+WL_SHM_FORMAT_RGBA4444 :: 0x32314152
+WL_SHM_FORMAT_YUV410 :: 0x39565559
+WL_SHM_FORMAT_R16 :: 0x20363152
+WL_SHM_FORMAT_X0L2 :: 0x324c3058
+WL_SHM_FORMAT_XRGB1555 :: 0x35315258
+WL_SHM_FORMAT_BGRX8888_A8 :: 0x38415842
+WL_SHM_FORMAT_RGB332 :: 0x38424752
+WL_SHM_FORMAT_NV21 :: 0x3132564e
+WL_SHM_FORMAT_P010 :: 0x30313050
+WL_SHM_FORMAT_RGB565_A8 :: 0x38413552
+WL_SHM_FORMAT_RG1616 :: 0x32334752
+WL_SHM_FORMAT_RGBX8888 :: 0x34325852
+WL_SHM_FORMAT_XBGR2101010 :: 0x30334258
+WL_SHM_FORMAT_Y412 :: 0x32313459
+WL_SHM_FORMAT_BGRA4444 :: 0x32314142
+WL_SHM_FORMAT_YUV420_8BIT :: 0x38305559
+WL_SHM_FORMAT_ARGB2101010 :: 0x30335241
+WL_SHM_FORMAT_RGB888 :: 0x34324752
+WL_SHM_FORMAT_ABGR4444 :: 0x32314241
+WL_SHM_FORMAT_XRGB4444 :: 0x32315258
+WL_SHM_FORMAT_XBGR1555 :: 0x35314258
+WL_SHM_FORMAT_YUV422 :: 0x36315559
+WL_SHM_FORMAT_XYUV8888 :: 0x56555958
+WL_SHM_FORMAT_GR1616 :: 0x32335247
+WL_SHM_FORMAT_NV24 :: 0x3432564e
+WL_SHM_FORMAT_ABGR16161616 :: 0x38344241
+
+wl_buffer :: struct {}
 wl_buffer_listener :: struct {
 	release: proc "c" (data: rawptr, wl_buffer: ^wl_buffer),
 }
@@ -375,8 +508,8 @@ init_wl_buffer_interface :: proc() {
 	wl_buffer_interface = {"wl_buffer", 1, 1, &wl_buffer_requests[0], 1, &wl_buffer_events[0]}
 }
 
-wl_data_offer :: struct {
-}
+
+wl_data_offer :: struct {}
 wl_data_offer_listener :: struct {
 	offer:          proc "c" (data: rawptr, wl_data_offer: ^wl_data_offer, mime_type: cstring),
 	source_actions: proc "c" (
@@ -496,8 +629,12 @@ init_wl_data_offer_interface :: proc() {
 	}
 }
 
-wl_data_source :: struct {
-}
+WL_DATA_OFFER_ERROR_INVALID_FINISH :: 0
+WL_DATA_OFFER_ERROR_INVALID_OFFER :: 3
+WL_DATA_OFFER_ERROR_INVALID_ACTION :: 2
+WL_DATA_OFFER_ERROR_INVALID_ACTION_MASK :: 1
+
+wl_data_source :: struct {}
 wl_data_source_listener :: struct {
 	target:             proc "c" (
 		data: rawptr,
@@ -595,8 +732,10 @@ init_wl_data_source_interface :: proc() {
 	}
 }
 
-wl_data_device :: struct {
-}
+WL_DATA_SOURCE_ERROR_INVALID_SOURCE :: 1
+WL_DATA_SOURCE_ERROR_INVALID_ACTION_MASK :: 0
+
+wl_data_device :: struct {}
 wl_data_device_listener :: struct {
 	data_offer: proc "c" (data: rawptr, wl_data_device: ^wl_data_device, id: c.uint32_t),
 	enter:      proc "c" (
@@ -678,6 +817,11 @@ wl_data_device_release :: proc "c" (_wl_data_device: ^wl_data_device) {
 
 }
 
+
+wl_data_device_destroy :: proc "c" (wl_data_device: ^wl_data_device) {
+	proxy_destroy(cast(^wl_proxy)wl_data_device)
+}
+
 wl_data_device_requests: []wl_message = []wl_message {
 	{
 		"start_drag",
@@ -721,10 +865,10 @@ init_wl_data_device_interface :: proc() {
 	}
 }
 
-wl_data_device_manager :: struct {
-}
-wl_data_device_manager_listener :: struct {
-}
+WL_DATA_DEVICE_ERROR_ROLE :: 0
+
+wl_data_device_manager :: struct {}
+wl_data_device_manager_listener :: struct {}
 
 wl_data_device_manager_add_listener :: proc(
 	wl_data_device_manager: ^wl_data_device_manager,
@@ -775,6 +919,11 @@ wl_data_device_manager_get_data_device :: proc "c" (
 	return cast(^wl_data_device)id
 }
 
+
+wl_data_device_manager_destroy :: proc "c" (wl_data_device_manager: ^wl_data_device_manager) {
+	proxy_destroy(cast(^wl_proxy)wl_data_device_manager)
+}
+
 wl_data_device_manager_requests: []wl_message = []wl_message {
 	{"create_data_source", "n", raw_data([]^wl_interface{&wl_data_source_interface})},
 	{
@@ -799,10 +948,13 @@ init_wl_data_device_manager_interface :: proc() {
 	}
 }
 
-wl_shell :: struct {
-}
-wl_shell_listener :: struct {
-}
+WL_DATA_DEVICE_MANAGER_DND_ACTION_COPY :: 1
+WL_DATA_DEVICE_MANAGER_DND_ACTION_MOVE :: 2
+WL_DATA_DEVICE_MANAGER_DND_ACTION_ASK :: 4
+WL_DATA_DEVICE_MANAGER_DND_ACTION_NONE :: 0
+
+wl_shell :: struct {}
+wl_shell_listener :: struct {}
 
 wl_shell_add_listener :: proc(
 	wl_shell: ^wl_shell,
@@ -832,6 +984,11 @@ wl_shell_get_shell_surface :: proc "c" (
 	return cast(^wl_shell_surface)id
 }
 
+
+wl_shell_destroy :: proc "c" (wl_shell: ^wl_shell) {
+	proxy_destroy(cast(^wl_proxy)wl_shell)
+}
+
 wl_shell_requests: []wl_message = []wl_message {
 	{
 		"get_shell_surface",
@@ -848,8 +1005,9 @@ init_wl_shell_interface :: proc() {
 	wl_shell_interface = {"wl_shell", 1, 1, &wl_shell_requests[0], 0, nil}
 }
 
-wl_shell_surface :: struct {
-}
+WL_SHELL_ERROR_ROLE :: 0
+
+wl_shell_surface :: struct {}
 wl_shell_surface_listener :: struct {
 	ping:       proc "c" (data: rawptr, wl_shell_surface: ^wl_shell_surface, serial: c.uint32_t),
 	configure:  proc "c" (
@@ -1034,6 +1192,11 @@ wl_shell_surface_set_class :: proc "c" (_wl_shell_surface: ^wl_shell_surface, cl
 
 }
 
+
+wl_shell_surface_destroy :: proc "c" (wl_shell_surface: ^wl_shell_surface) {
+	proxy_destroy(cast(^wl_proxy)wl_shell_surface)
+}
+
 wl_shell_surface_requests: []wl_message = []wl_message {
 	{"pong", "u", raw_data([]^wl_interface{nil})},
 	{"move", "ou", raw_data([]^wl_interface{&wl_seat_interface, nil})},
@@ -1070,8 +1233,22 @@ init_wl_shell_surface_interface :: proc() {
 	}
 }
 
-wl_surface :: struct {
-}
+WL_SHELL_SURFACE_RESIZE_RIGHT :: 8
+WL_SHELL_SURFACE_RESIZE_BOTTOM :: 2
+WL_SHELL_SURFACE_RESIZE_TOP_RIGHT :: 9
+WL_SHELL_SURFACE_RESIZE_TOP :: 1
+WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT :: 6
+WL_SHELL_SURFACE_RESIZE_NONE :: 0
+WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT :: 10
+WL_SHELL_SURFACE_RESIZE_TOP_LEFT :: 5
+WL_SHELL_SURFACE_RESIZE_LEFT :: 4
+WL_SHELL_SURFACE_TRANSIENT_INACTIVE :: 0x1
+WL_SHELL_SURFACE_FULLSCREEN_METHOD_DRIVER :: 2
+WL_SHELL_SURFACE_FULLSCREEN_METHOD_FILL :: 3
+WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE :: 1
+WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT :: 0
+
+wl_surface :: struct {}
 wl_surface_listener :: struct {
 	enter:                      proc "c" (
 		data: rawptr,
@@ -1205,7 +1382,7 @@ wl_surface_commit :: proc "c" (_wl_surface: ^wl_surface) {
 
 }
 
-wl_surface_set_buffer_transform :: proc "c" (_wl_surface: ^wl_surface, transform: c.int32_t) {
+wl_surface_set_buffer_transform :: proc "c" (_wl_surface: ^wl_surface, transform: c.uint32_t) {
 	proxy_marshal_flags(
 		cast(^wl_proxy)_wl_surface,
 		7,
@@ -1290,8 +1467,13 @@ init_wl_surface_interface :: proc() {
 	wl_surface_interface = {"wl_surface", 6, 11, &wl_surface_requests[0], 4, &wl_surface_events[0]}
 }
 
-wl_seat :: struct {
-}
+WL_SURFACE_ERROR_INVALID_SCALE :: 0
+WL_SURFACE_ERROR_DEFUNCT_ROLE_OBJECT :: 4
+WL_SURFACE_ERROR_INVALID_OFFSET :: 3
+WL_SURFACE_ERROR_INVALID_TRANSFORM :: 1
+WL_SURFACE_ERROR_INVALID_SIZE :: 2
+
+wl_seat :: struct {}
 wl_seat_listener :: struct {
 	capabilities: proc "c" (data: rawptr, wl_seat: ^wl_seat, capabilities: c.uint32_t),
 	name:         proc "c" (data: rawptr, wl_seat: ^wl_seat, name: cstring),
@@ -1362,6 +1544,11 @@ wl_seat_release :: proc "c" (_wl_seat: ^wl_seat) {
 
 }
 
+
+wl_seat_destroy :: proc "c" (wl_seat: ^wl_seat) {
+	proxy_destroy(cast(^wl_proxy)wl_seat)
+}
+
 wl_seat_requests: []wl_message = []wl_message {
 	{"get_pointer", "n", raw_data([]^wl_interface{&wl_pointer_interface})},
 	{"get_keyboard", "n", raw_data([]^wl_interface{&wl_keyboard_interface})},
@@ -1380,8 +1567,12 @@ init_wl_seat_interface :: proc() {
 	wl_seat_interface = {"wl_seat", 9, 4, &wl_seat_requests[0], 2, &wl_seat_events[0]}
 }
 
-wl_pointer :: struct {
-}
+WL_SEAT_CAPABILITY_POINTER :: 1
+WL_SEAT_CAPABILITY_TOUCH :: 4
+WL_SEAT_CAPABILITY_KEYBOARD :: 2
+WL_SEAT_ERROR_MISSING_CAPABILITY :: 0
+
+wl_pointer :: struct {}
 wl_pointer_listener :: struct {
 	enter:                   proc "c" (
 		data: rawptr,
@@ -1492,6 +1683,11 @@ wl_pointer_release :: proc "c" (_wl_pointer: ^wl_pointer) {
 
 }
 
+
+wl_pointer_destroy :: proc "c" (wl_pointer: ^wl_pointer) {
+	proxy_destroy(cast(^wl_proxy)wl_pointer)
+}
+
 wl_pointer_requests: []wl_message = []wl_message {
 	{"set_cursor", "u?oii", raw_data([]^wl_interface{nil, &wl_surface_interface, nil, nil})},
 	{"release", "", raw_data([]^wl_interface{})},
@@ -1517,8 +1713,19 @@ init_wl_pointer_interface :: proc() {
 	wl_pointer_interface = {"wl_pointer", 9, 2, &wl_pointer_requests[0], 11, &wl_pointer_events[0]}
 }
 
-wl_keyboard :: struct {
-}
+WL_POINTER_ERROR_ROLE :: 0
+WL_POINTER_BUTTON_STATE_RELEASED :: 0
+WL_POINTER_BUTTON_STATE_PRESSED :: 1
+WL_POINTER_AXIS_HORIZONTAL_SCROLL :: 1
+WL_POINTER_AXIS_VERTICAL_SCROLL :: 0
+WL_POINTER_AXIS_SOURCE_WHEEL :: 0
+WL_POINTER_AXIS_SOURCE_WHEEL_TILT :: 3
+WL_POINTER_AXIS_SOURCE_FINGER :: 1
+WL_POINTER_AXIS_SOURCE_CONTINUOUS :: 2
+WL_POINTER_AXIS_RELATIVE_DIRECTION_IDENTICAL :: 0
+WL_POINTER_AXIS_RELATIVE_DIRECTION_INVERTED :: 1
+
+wl_keyboard :: struct {}
 wl_keyboard_listener :: struct {
 	keymap:      proc "c" (
 		data: rawptr,
@@ -1585,6 +1792,11 @@ wl_keyboard_release :: proc "c" (_wl_keyboard: ^wl_keyboard) {
 
 }
 
+
+wl_keyboard_destroy :: proc "c" (wl_keyboard: ^wl_keyboard) {
+	proxy_destroy(cast(^wl_proxy)wl_keyboard)
+}
+
 wl_keyboard_requests: []wl_message = []wl_message{{"release", "", raw_data([]^wl_interface{})}}
 
 wl_keyboard_events: []wl_message = []wl_message {
@@ -1609,8 +1821,12 @@ init_wl_keyboard_interface :: proc() {
 	}
 }
 
-wl_touch :: struct {
-}
+WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1 :: 1
+WL_KEYBOARD_KEYMAP_FORMAT_NO_KEYMAP :: 0
+WL_KEYBOARD_KEY_STATE_RELEASED :: 0
+WL_KEYBOARD_KEY_STATE_PRESSED :: 1
+
+wl_touch :: struct {}
 wl_touch_listener :: struct {
 	down:        proc "c" (
 		data: rawptr,
@@ -1674,6 +1890,11 @@ wl_touch_release :: proc "c" (_wl_touch: ^wl_touch) {
 
 }
 
+
+wl_touch_destroy :: proc "c" (wl_touch: ^wl_touch) {
+	proxy_destroy(cast(^wl_proxy)wl_touch)
+}
+
 wl_touch_requests: []wl_message = []wl_message{{"release", "", raw_data([]^wl_interface{})}}
 
 wl_touch_events: []wl_message = []wl_message {
@@ -1692,8 +1913,8 @@ init_wl_touch_interface :: proc() {
 	wl_touch_interface = {"wl_touch", 9, 1, &wl_touch_requests[0], 7, &wl_touch_events[0]}
 }
 
-wl_output :: struct {
-}
+
+wl_output :: struct {}
 wl_output_listener :: struct {
 	geometry:    proc "c" (
 		data: rawptr,
@@ -1741,6 +1962,11 @@ wl_output_release :: proc "c" (_wl_output: ^wl_output) {
 
 }
 
+
+wl_output_destroy :: proc "c" (wl_output: ^wl_output) {
+	proxy_destroy(cast(^wl_proxy)wl_output)
+}
+
 wl_output_requests: []wl_message = []wl_message{{"release", "", raw_data([]^wl_interface{})}}
 
 wl_output_events: []wl_message = []wl_message {
@@ -1758,10 +1984,25 @@ init_wl_output_interface :: proc() {
 	wl_output_interface = {"wl_output", 4, 1, &wl_output_requests[0], 6, &wl_output_events[0]}
 }
 
-wl_region :: struct {
-}
-wl_region_listener :: struct {
-}
+WL_OUTPUT_SUBPIXEL_HORIZONTAL_RGB :: 2
+WL_OUTPUT_SUBPIXEL_HORIZONTAL_BGR :: 3
+WL_OUTPUT_SUBPIXEL_VERTICAL_RGB :: 4
+WL_OUTPUT_SUBPIXEL_VERTICAL_BGR :: 5
+WL_OUTPUT_SUBPIXEL_UNKNOWN :: 0
+WL_OUTPUT_SUBPIXEL_NONE :: 1
+WL_OUTPUT_TRANSFORM_FLIPPED_90 :: 5
+WL_OUTPUT_TRANSFORM_FLIPPED :: 4
+WL_OUTPUT_TRANSFORM_FLIPPED_180 :: 6
+WL_OUTPUT_TRANSFORM_270 :: 3
+WL_OUTPUT_TRANSFORM_FLIPPED_270 :: 7
+WL_OUTPUT_TRANSFORM_NORMAL :: 0
+WL_OUTPUT_TRANSFORM_180 :: 2
+WL_OUTPUT_TRANSFORM_90 :: 1
+WL_OUTPUT_MODE_CURRENT :: 0x1
+WL_OUTPUT_MODE_PREFERRED :: 0x2
+
+wl_region :: struct {}
+wl_region_listener :: struct {}
 
 wl_region_add_listener :: proc(
 	wl_region: ^wl_region,
@@ -1839,10 +2080,9 @@ init_wl_region_interface :: proc() {
 	wl_region_interface = {"wl_region", 1, 3, &wl_region_requests[0], 0, nil}
 }
 
-wl_subcompositor :: struct {
-}
-wl_subcompositor_listener :: struct {
-}
+
+wl_subcompositor :: struct {}
+wl_subcompositor_listener :: struct {}
 
 wl_subcompositor_add_listener :: proc(
 	wl_subcompositor: ^wl_subcompositor,
@@ -1908,10 +2148,11 @@ init_wl_subcompositor_interface :: proc() {
 	wl_subcompositor_interface = {"wl_subcompositor", 1, 2, &wl_subcompositor_requests[0], 0, nil}
 }
 
-wl_subsurface :: struct {
-}
-wl_subsurface_listener :: struct {
-}
+WL_SUBCOMPOSITOR_ERROR_BAD_SURFACE :: 0
+WL_SUBCOMPOSITOR_ERROR_BAD_PARENT :: 1
+
+wl_subsurface :: struct {}
+wl_subsurface_listener :: struct {}
 
 wl_subsurface_add_listener :: proc(
 	wl_subsurface: ^wl_subsurface,
@@ -2012,3 +2253,5 @@ wl_subsurface_interface: wl_interface = {}
 init_wl_subsurface_interface :: proc() {
 	wl_subsurface_interface = {"wl_subsurface", 1, 6, &wl_subsurface_requests[0], 0, nil}
 }
+
+WL_SUBSURFACE_ERROR_BAD_SURFACE :: 0

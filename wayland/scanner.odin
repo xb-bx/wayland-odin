@@ -199,18 +199,25 @@ emit_interface_code :: proc(out: os.Handle, interface: Interface) {
 	emit_structs(out, interface)
 	emit_listeners(out, interface)
 	emit_request_stubs(out, interface)
+	emit_destroy(out, interface)
 	emit_private_code(out, interface)
 	emit_enums(out, interface)
 }
 
 emit_enums :: proc(out: os.Handle, interface: Interface) {
 	for _enum in interface.enums {
-		fmt.fprintf(out, "%s_%s :: enum {{\n", interface.name, _enum.name)
 		for key, value in _enum.values {
-			fmt.fprintf(out, "\t%s = %s,\n", strings.to_upper(key), value)
+			fmt.fprintf(
+				out,
+				"%s_%s_%s :: %s\n",
+				strings.to_upper(interface.name),
+				strings.to_upper(_enum.name),
+				strings.to_upper(key),
+				value,
+			)
 		}
-		fmt.fprintf(out, "}}\n\n")
 	}
+	fmt.fprintf(out, "\n")
 }
 
 emit_structs :: proc(out: os.Handle, interface: Interface) {
@@ -218,6 +225,40 @@ emit_structs :: proc(out: os.Handle, interface: Interface) {
 		fmt.fprintf(out, "%s :: struct {{}}\n", interface.name)
 	}
 
+}
+
+emit_destroy :: proc(out: os.Handle, interface: Interface) {
+	// Emit function destroy
+	if interface.name == "wl_display" {
+		return
+	}
+
+	has_destroy := false
+	for req in interface.requests {
+		if req.name == "destroy" {
+			has_destroy = true
+			break
+		}
+	}
+
+	if !has_destroy {
+		destroy_template := `
+%s_destroy :: proc "c" (%s: ^%s) {{
+	proxy_destroy(cast(^wl_proxy)%s)
+}};
+
+`
+
+
+		fmt.fprintf(
+			out,
+			destroy_template,
+			interface.name,
+			interface.name,
+			interface.name,
+			interface.name,
+		)
+	}
 }
 
 emit_listeners :: proc(out: os.Handle, interface: Interface) {
@@ -279,26 +320,6 @@ emit_listeners :: proc(out: os.Handle, interface: Interface) {
 		interface.name,
 		interface.name,
 	)
-
-
-	// Emit function destroy
-	//	destroy_template := `%s_destroy :: proc(
-	//    %s: ^%s,
-	//) {{
-	//    proxy_destroy(cast(^wl_proxy)%s)
-	//}};
-	//
-	//`
-	//
-	//
-	//	fmt.fprintf(
-	//		out,
-	//		destroy_template,
-	//		interface.name,
-	//		interface.name,
-	//		interface.name,
-	//		interface.name,
-	//	)
 }
 
 emit_request_stubs :: proc(out: os.Handle, interface: Interface) {
@@ -358,11 +379,12 @@ emit_request_stubs :: proc(out: os.Handle, interface: Interface) {
 					enum_name = strings.split(arg._enum, ".")[1]
 				}
 
+				// FOR NOW IGNORE THE ABOVE SINCE TYPING THE ENUMS IS A MESS
 				fmt.fprintf(
 					out,
-					",%s : %s",
+					",%s : c.uint32_t",
 					arg.name,
-					fmt.tprintf("%s_%s", interface_name, enum_name),
+					// fmt.tprintf("%s_%s", interface_name, enum_name),
 				)
 				continue
 			} else {
