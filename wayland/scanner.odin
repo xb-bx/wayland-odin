@@ -11,6 +11,7 @@ Arg :: struct {
 	type:      string,
 	interface: string,
 	nullable:  bool,
+	_enum:     string,
 }
 
 Event :: struct {
@@ -27,11 +28,17 @@ Request :: struct {
 	type:        string,
 }
 
+Enum :: struct {
+	name:   string,
+	values: map[string]string,
+}
+
 Interface :: struct {
 	name:     string,
 	events:   [dynamic]Event,
 	requests: [dynamic]Request,
 	version:  string,
+	enums:    [dynamic]Enum,
 }
 
 type_map := map[string]string {
@@ -70,6 +77,7 @@ process_event :: proc(doc: ^xml.Document, interface: ^Interface, index: u32) -> 
 			arg_type, _ := xml.find_attribute_val_by_key(doc, val.(u32), "type")
 			arg_nullable, _ := xml.find_attribute_val_by_key(doc, val.(u32), "allow-null")
 			arg_interface, _ := xml.find_attribute_val_by_key(doc, val.(u32), "interface")
+			arg_enum, _ := xml.find_attribute_val_by_key(doc, val.(u32), "enum")
 
 			nullable := arg_nullable == "true" ? true : false
 			append(
@@ -79,6 +87,7 @@ process_event :: proc(doc: ^xml.Document, interface: ^Interface, index: u32) -> 
 					type = arg_type,
 					interface = arg_interface,
 					nullable = nullable,
+					_enum = arg_enum,
 				},
 			)
 		}
@@ -109,6 +118,7 @@ process_request :: proc(
 			arg_name, _ := xml.find_attribute_val_by_key(doc, val.(u32), "name")
 			arg_type, _ := xml.find_attribute_val_by_key(doc, val.(u32), "type")
 			arg_nullable, _ := xml.find_attribute_val_by_key(doc, val.(u32), "allow-null")
+			arg_enum, _ := xml.find_attribute_val_by_key(doc, val.(u32), "enum")
 			nullable := arg_nullable == "true" ? true : false
 
 			if arg_type == "new_id" {
@@ -123,6 +133,7 @@ process_request :: proc(
 					type = arg_type,
 					interface = arg_interface,
 					nullable = nullable,
+					_enum = arg_enum,
 				},
 			)
 		}
@@ -131,6 +142,27 @@ process_request :: proc(
 	return request
 }
 
+process_enum :: proc(doc: ^xml.Document, interface: ^Interface, index: u32) -> Enum {
+	enum_name, _ := xml.find_attribute_val_by_key(doc, index, "name")
+	request_type, _ := xml.find_attribute_val_by_key(doc, index, "type")
+	el := doc.elements[index]
+
+	_enum := Enum {
+		name   = enum_name,
+		values = make(map[string]string),
+	}
+
+	for val in el.value {
+		el := doc.elements[val.(u32)]
+
+		if el.ident == "entry" {
+			entry_name, _ := xml.find_attribute_val_by_key(doc, val.(u32), "name")
+			entry_value, _ := xml.find_attribute_val_by_key(doc, val.(u32), "value")
+			_enum.values[entry_name] = entry_value
+		}
+	}
+	return _enum
+}
 
 process_interface :: proc(doc: ^xml.Document, el: xml.Element) -> Interface {
 	interface := Interface{}
@@ -155,6 +187,9 @@ process_interface :: proc(doc: ^xml.Document, el: xml.Element) -> Interface {
 			append(&interface.requests, process_request(doc, &interface, val.(u32), opcode))
 			opcode += 1
 		}
+		if el.ident == "enum" {
+			append(&interface.enums, process_enum(doc, &interface, val.(u32)))
+		}
 	}
 
 	return interface
@@ -165,7 +200,19 @@ emit_interface_code :: proc(out: os.Handle, interface: Interface) {
 	emit_listeners(out, interface)
 	emit_request_stubs(out, interface)
 	emit_private_code(out, interface)
+	emit_enums(out, interface)
 }
+
+emit_enums :: proc(out: os.Handle, interface: Interface) {
+	for _enum in interface.enums {
+		fmt.fprintf(out, "%s_%s :: enum {{\n", interface.name, _enum.name)
+		for key, value in _enum.values {
+			fmt.fprintf(out, "\t%s = %s,\n", strings.to_upper(key), value)
+		}
+		fmt.fprintf(out, "}}\n\n")
+	}
+}
+
 emit_structs :: proc(out: os.Handle, interface: Interface) {
 	if interface.name != "wl_display" {
 		fmt.fprintf(out, "%s :: struct {{}}\n", interface.name)
@@ -299,8 +346,28 @@ emit_request_stubs :: proc(out: os.Handle, interface: Interface) {
 				continue
 			} else if arg.type == "new_id" {
 				continue
+			} else if arg._enum != "" {
+				// Deal with enums from other interfaces
+				// Base case it the interface itself and the value from the "enum" field
+				enum_name := arg._enum
+				interface_name := interface.name
+
+				// Otherwise it will come in the format <interface>.<enum>
+				if strings.contains(arg._enum, ".") {
+					interface_name = strings.split(arg._enum, ".")[0]
+					enum_name = strings.split(arg._enum, ".")[1]
+				}
+
+				fmt.fprintf(
+					out,
+					",%s : %s",
+					arg.name,
+					fmt.tprintf("%s_%s", interface_name, enum_name),
+				)
+				continue
+			} else {
+				fmt.fprintf(out, ",%s : %s", arg.name, emit_type(arg))
 			}
-			fmt.fprintf(out, ",%s : %s", arg.name, emit_type(arg))
 		}
 
 		// Close proc header and add return type
