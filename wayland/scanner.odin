@@ -138,6 +138,9 @@ process_request :: proc(
 			)
 		}
 	}
+	if request.name == "bind" {
+		fmt.println(request)
+	}
 	request.num_new_ids = num_new_ids
 	return request
 }
@@ -504,6 +507,13 @@ emit_requests_message :: proc(out: os.Handle, request: Request) {
 
 	// Generate type interfaces
 	for arg in request.args {
+		// This complies with the case that wl_registry.bind() has a new_id but no specific interface and it "serializes as "sun"
+		// Dunno why. Since we don't have forward declaration (wayland_types) we need to produce 3 nil values to pad this.
+		// This is used in effect only to print the closures used when running with WAYLAND_DEBUG=1
+		if arg.type == "new_id" && arg.interface == "" {
+			append(&type_arr, fmt.tprintf("nil,nil,nil"))
+			continue
+		}
 		if arg.interface != "" {
 			append(&type_arr, fmt.tprintf("&%s_interface", arg.interface))
 		} else {
