@@ -1,11 +1,11 @@
 package main
 
+import "../render"
+import "../utils"
+import wl "../wayland"
 import "core:c"
 import "core:c/libc"
 import "core:fmt"
-import "render"
-import "utils"
-import wl "wayland"
 
 import "core:sys/posix"
 

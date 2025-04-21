@@ -1,10 +1,13 @@
 odin
 main
 scanner
-scanner.bin
 .gdb_history
 
 wayland-client.c
 wayland-code.c
 wayland-header.h
 wayland.xml
+wayland-odin
+*.bin
+*.bin
+
