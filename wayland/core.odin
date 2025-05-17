@@ -9,6 +9,8 @@ foreign import lib_egl "system:wayland-egl"
 foreign lib {
 	display_connect :: proc(_: cstring) -> ^wl_display ---
 	display_dispatch :: proc(_: ^wl_display) -> c.int ---
+	display_flush :: proc(_: ^wl_display) -> c.int ---
+	display_dispatch_pending :: proc(_: ^wl_display) -> c.int ---
 	proxy_marshal_flags :: proc(_: ^wl_proxy, _: c.uint32_t, _: ^wl_interface, _: c.uint32_t, _: c.uint32_t, #c_vararg _: ..any) -> ^wl_proxy ---
 	proxy_get_version :: proc(_: ^wl_proxy) -> c.uint32_t ---
 	display_roundtrip :: proc(_: ^wl_display) -> c.int ---
@@ -19,11 +21,13 @@ foreign lib {
 @(default_calling_convention = "c", link_prefix = "wl_")
 foreign lib_egl {
 	egl_window_create :: proc(_: ^wl_surface, _: c.int, _: c.int) -> ^egl_window ---
+	egl_window_resize :: proc(_: ^egl_window, _: c.int, _: c.int, _: c.int, _: c.int) ---
 	egl_window_destroy :: proc(_: ^egl_window) ---
 }
 
 
-egl_window :: struct {}
+egl_window :: struct {
+}
 // struct wl_map {
 // 	struct wl_array client_entries;
 // 	struct wl_array server_entries;
