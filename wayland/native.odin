@@ -17,17 +17,20 @@ Wl_Event :: union {
 }
 
 Wl_Base_Interface :: struct {
-	proxy:     ^wl_proxy,
-	interface: ^wl_interface,
+	// proxy:     ^wl_proxy,
+	// interface: ^wl_interface,
 }
 
 Wl_Display :: struct {
-	using base:   Wl_Base_Interface,
+	proxy:        ^wl_proxy,
+	interface:    ^wl_interface,
 	get_registry: proc "c" (_wl_display: ^Wl_Display) -> Wl_Registry,
 }
 
 Wl_Registry :: struct {
-	using base: Wl_Base_Interface,
+	// using base: Wl_Base_Interface,
+	proxy:     ^wl_proxy,
+	interface: ^wl_interface,
 }
 
 Wl_Registry_Global :: struct {
@@ -58,12 +61,16 @@ init :: proc() {
 poll :: proc() -> []Wl_Event {
 	result: [dynamic]Wl_Event
 
-	for {
-		event, ok := queue.pop_front_safe(&_way.queue)
-		fmt.println("---", event)
-		if !ok {
-			break
-		}
+	// for {
+	// 	event, ok := queue.pop_front_safe(&_way.queue)
+	// 	fmt.println("---", event)
+	// 	if !ok {
+	// 		break
+	// 	}
+	// 	append(&result, event)
+	// }
+	for event in q {
+		fmt.println(event)
 		append(&result, event)
 	}
 
@@ -78,7 +85,7 @@ roundtrip :: proc() {
 bind_interfaces :: proc(interface_names: []string) {
 	roundtrip()
 	for event in poll() {
-		fmt.println("###", event)
+		// fmt.println("###", event)
 		// #partial switch e in event {
 		// case Wl_Registry_Global:
 		// 	for iname in interface_names {
@@ -89,6 +96,9 @@ bind_interfaces :: proc(interface_names: []string) {
 		// }
 	}
 }
+
+q: [100]Wl_Event
+qi: u32 = 0
 
 _wl_display_get_registry :: proc "c" (_wl_display: ^Wl_Display) -> Wl_Registry {
 	display: ^wl_proxy = _wl_display.proxy
@@ -111,9 +121,12 @@ _wl_display_get_registry :: proc "c" (_wl_display: ^Wl_Display) -> Wl_Registry {
 		) {
 			way := cast(^Wayland)data
 			context = runtime.default_context()
-			// fmt.println(data, registry, name, interface, version)
-			queue.enqueue(&way.queue, Wl_Registry_Global{data, registry, name, interface, version})
-			fmt.println(queue.pop_back_safe(&way.queue))
+			// fmt.println(Wl_Registry_Global{data, registry, name, interface, version})
+			// queue.enqueue(&way.queue, Wl_Registry_Global{data, registry, name, interface, version})
+			// append(&q, Wl_Registry_Global{data, registry, name, interface, version})
+			q[qi] = Wl_Registry_Global{data, registry, name, interface, version}
+			qi += 1
+			// fmt.println(queue.pop_back_safe(&way.queue))
 		},
 		global_remove = nil,
 	}

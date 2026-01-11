@@ -12,3 +12,5 @@ wayland-odin
 *.bin
 
 build/
+
+native-test
