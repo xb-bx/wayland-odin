@@ -6,9 +6,12 @@ import "core:container/queue"
 import "core:fmt"
 import "core:strings"
 
+InterfaceMap :: map[string]^Wl_Base_Interface
+
 Wl_Handle :: struct {
-	display: Wl_Display,
-	queue:   queue.Queue(Wl_Event),
+	display:    Wl_Display,
+	queue:      queue.Queue(Wl_Event),
+	interfaces: InterfaceMap,
 }
 
 Wl_Event :: union {
@@ -21,17 +24,99 @@ Wl_Base_Interface :: struct {
 	interface: ^wl_interface,
 }
 
-Wl_Display :: struct {
-	using base:   Wl_Base_Interface,
-	// proxy:        ^wl_proxy,
-	// interface:    ^wl_interface,
-	get_registry: proc "c" (_wl_display: ^Wl_Display) -> Wl_Registry,
+
+@(private)
+wh: Wl_Handle = {}
+
+init :: proc() {
+	d := display_connect(nil)
+	fmt.printf("original display pointer %p\n", d)
+	// Manualy configure a display interface object
+	wh.display = Wl_Display {
+		proxy        = cast(^wl_proxy)d,
+		interface    = &wl_display_interface,
+		get_registry = _wl_display_get_registry,
+	}
+
+
+	wh.interfaces[WL_INTERFACE_WL_REGISTRY] = wh.display->get_registry()
 }
 
+poll :: proc() -> []Wl_Event {
+	roundtrip()
+	result: [dynamic]Wl_Event
+
+	for {
+		event, ok := queue.pop_front_safe(&wh.queue)
+		if !ok {
+			break
+		}
+		append(&result, event)
+	}
+	return result[:]
+}
+
+roundtrip :: proc "contextless" () {
+	display_roundtrip(cast(^wl_display)wh.display.proxy)
+}
+
+
+interface :: proc(name: string, $T: typeid) -> ^T {
+	iface := wh.interfaces[name]
+
+	return cast(^T)iface
+}
+
+bind_interfaces :: proc(interface_names: []string) {
+	registry := cast(^Wl_Registry)(wh.interfaces["wl_registry"])
+	for event in poll() {
+		#partial switch e in event {
+		case Wl_Registry_Global:
+			for iname in interface_names {
+				if string(e.interface) == iname {
+					proxy := cast(^wl_proxy)registry->bind(
+						e.name,
+						&wl_compositor_interface,
+						e.version,
+					)
+					wh.interfaces[WL_INTERFACE_WL_COMPOSITOR] = create_wl_compositor(proxy)
+				}
+			}
+		}
+	}
+}
+
+Wl_Display :: struct {
+	using base:   Wl_Base_Interface,
+	get_registry: proc "c" (_wl_display: ^Wl_Display) -> ^Wl_Registry,
+}
+
+_wl_display_get_registry :: proc "c" (_wl_display: ^Wl_Display) -> ^Wl_Registry {
+	display: ^wl_proxy = _wl_display.proxy
+	registry: ^wl_proxy
+	registry = proxy_marshal_flags(
+		display,
+		1,
+		&wl_registry_interface,
+		proxy_get_version(display),
+		0,
+		nil,
+	)
+
+	return create_wl_registry(registry)
+}
+
+WL_INTERFACE_WL_REGISTRY: string = "wl_registry"
+
 Wl_Registry :: struct {
-	// using base: Wl_Base_Interface,
-	proxy:     ^wl_proxy,
-	interface: ^wl_interface,
+	using base: Wl_Base_Interface,
+	bind:       proc "c" (
+		_: ^Wl_Registry,
+		name: c.uint32_t,
+		interface: ^wl_interface,
+		version: c.uint32_t,
+	) -> rawptr,
+	destroy:    proc "c" (wl_registry: ^wl_registry),
 }
 
 Wl_Registry_Global :: struct {
@@ -48,65 +133,8 @@ Wl_Registry_Global_Remove :: struct {
 	name:     c.uint32_t,
 }
 
-@(private)
-wh: Wl_Handle = {}
 
-init :: proc() {
-	d := display_connect(nil)
-	fmt.printf("original display pointer %p\n", d)
-	// Manualy configure a display interface object
-	wh.display = Wl_Display {
-		proxy        = cast(^wl_proxy)d,
-		interface    = &wl_display_interface,
-		get_registry = _wl_display_get_registry,
-	}
-
-
-	wh.display->get_registry()
-}
-
-poll :: proc() -> []Wl_Event {
-	result: [dynamic]Wl_Event
-
-	for {
-		event, ok := queue.pop_front_safe(&wh.queue)
-		if !ok {
-			break
-		}
-		append(&result, event)
-	}
-	return result[:]
-}
-
-roundtrip :: proc() {
-	display_roundtrip(cast(^wl_display)wh.display.proxy)
-}
-
-
-bind_interfaces :: proc(interface_names: []string) {
-	for event in poll() {
-		#partial switch e in event {
-		case Wl_Registry_Global:
-			for iname in interface_names {
-				if string(e.interface) == iname {
-					fmt.println(e.interface)
-				}
-			}
-		}
-	}
-}
-
-_wl_display_get_registry :: proc "c" (_wl_display: ^Wl_Display) -> Wl_Registry {
-	display: ^wl_proxy = _wl_display.proxy
-	registry: ^wl_proxy
-	registry = proxy_marshal_flags(
-		display,
-		1,
-		&wl_registry_interface,
-		proxy_get_version(display),
-		0,
-		nil,
-	)
+create_wl_registry :: proc "contextless" (_wl_registry: ^wl_proxy) -> ^Wl_Registry {
 	context = runtime.default_context()
 	registry_listener := wl_registry_listener {
 		global = proc "c" (
@@ -135,14 +163,14 @@ _wl_display_get_registry :: proc "c" (_wl_display: ^Wl_Display) -> Wl_Registry {
 	}
 
 	wl_registry_bind :: proc "c" (
-		_wl_registry: ^wl_registry,
+		registry: ^Wl_Registry,
 		name: c.uint32_t,
 		interface: ^wl_interface,
 		version: c.uint32_t,
 	) -> rawptr {
 		id: ^wl_proxy
 		id = proxy_marshal_flags(
-			cast(^wl_proxy)_wl_registry,
+			registry.proxy,
 			0,
 			interface,
 			version,
@@ -162,8 +190,63 @@ _wl_display_get_registry :: proc "c" (_wl_display: ^Wl_Display) -> Wl_Registry {
 		proxy_destroy(cast(^wl_proxy)wl_registry)
 	}
 
-	proxy_add_listener(registry, cast(^Implementation)&registry_listener, nil)
+	proxy_add_listener(_wl_registry, cast(^Implementation)&registry_listener, nil)
 	roundtrip()
 
-	return Wl_Registry{proxy = registry, interface = &wl_registry_interface}
+	res := new(Wl_Registry)
+	res.proxy = _wl_registry
+	res.interface = &wl_registry_interface
+	res.bind = wl_registry_bind
+	res.destroy = wl_registry_destroy
+
+	return res
+}
+
+WL_INTERFACE_WL_COMPOSITOR: string = "wl_compositor"
+
+create_wl_compositor :: proc "contextless" (_wl_compositor: ^wl_proxy) -> ^Wl_Compositor {
+	context = runtime.default_context()
+	listener := wl_compositor_listener{}
+
+	proxy_add_listener(_wl_compositor, cast(^Implementation)&listener, nil)
+
+	wl_compositor_create_surface :: proc "c" (compositor: ^Wl_Compositor) -> ^wl_surface {
+
+		id: ^wl_proxy
+		id = proxy_marshal_flags(
+			compositor.proxy,
+			0,
+			&wl_surface_interface,
+			proxy_get_version(compositor.proxy),
+			0,
+			nil,
+		)
+		return cast(^wl_surface)id
+	}
+
+	wl_compositor_create_region :: proc "c" (compositor: ^Wl_Compositor) -> ^wl_region {
+		id: ^wl_proxy
+		id = proxy_marshal_flags(
+			compositor.proxy,
+			1,
+			&wl_region_interface,
+			proxy_get_version(compositor.proxy),
+			0,
+			nil,
+		)
+		return cast(^wl_region)id
+	}
+
+	res := new(Wl_Compositor)
+	res.proxy = _wl_compositor
+	res.interface = &wl_compositor_interface
+	res.create_surface = wl_compositor_create_surface
+	res.create_region = wl_compositor_create_region
+	return res
+}
+
+Wl_Compositor :: struct {
+	using base:     Wl_Base_Interface,
+	create_surface: proc "c" (compositor: ^Wl_Compositor) -> ^wl_surface,
+	create_region:  proc "c" (compositor: ^Wl_Compositor) -> ^wl_region,
 }

@@ -43,7 +43,8 @@ global :: proc "c" (
 ) {
 	if interface == wl.wl_compositor_interface.name {
 		state: ^state = cast(^state)data
-		state.compositor = cast(^wl.wl_compositor)(wl.wl_registry_bind(
+		state.compositor =
+		cast(^wl.wl_compositor)(wl.wl_registry_bind(
 				registry,
 				name,
 				&wl.wl_compositor_interface,
@@ -53,17 +54,14 @@ global :: proc "c" (
 
 	if interface == wl.wl_shm_interface.name {
 		state: ^state = cast(^state)data
-		state.shm = cast(^wl.wl_shm)(wl.wl_registry_bind(
-				registry,
-				name,
-				&wl.wl_shm_interface,
-				version,
-			))
+		state.shm =
+		cast(^wl.wl_shm)(wl.wl_registry_bind(registry, name, &wl.wl_shm_interface, version))
 	}
 
 	if interface == wl.xdg_wm_base_interface.name {
 		state: ^state = cast(^state)data
-		state.xdg_base = cast(^wl.xdg_wm_base)(wl.wl_registry_bind(
+		state.xdg_base =
+		cast(^wl.xdg_wm_base)(wl.wl_registry_bind(
 				registry,
 				name,
 				&wl.xdg_wm_base_interface,

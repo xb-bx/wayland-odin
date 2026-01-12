@@ -10,6 +10,9 @@ import wl "wayland"
 main :: proc() {
 	wl.init()
 	wl.bind_interfaces({"wl_compositor"})
-	// wl.roundtrip(&wh)
-	wl.poll()
+
+	compositor := wl.interface("wl_compositor", wl.Wl_Compositor)
+
+	fmt.println(compositor)
+	fmt.printf("%p\n", compositor->create_surface())
 }
