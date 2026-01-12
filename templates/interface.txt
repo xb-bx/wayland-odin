@@ -6,10 +6,9 @@ WL_INTERFACE_{{ upper_case }} :: "{{name}}"
     {{#requests}}
 
     {{name}} : proc "c" (
-        {{#args}}
-        {{name}}: {{emit_type}},
-        {{/args}}
-    ) {{#return_string}}->{{return_string}}{{/return_string}}
+        proxy: ^wl_proxy,
+        {{args_string}}
+    ) {{#return_string}}->{{return_string}}{{/return_string}},
 
     {{/requests}}
 }

@@ -14,6 +14,8 @@ Arg :: struct {
 	interface: string,
 	nullable:  bool,
 	_enum:     string,
+	is_new_id: bool,
+	is_last:   bool,
 }
 
 Event :: struct {
@@ -32,6 +34,7 @@ Request :: struct {
 	opcode:        int,
 	type:          string,
 	return_string: string,
+	args_string:   string,
 }
 
 Enum :: struct {
@@ -103,6 +106,9 @@ process_event :: proc(doc: ^xml.Document, interface: ^Interface, index: u32) -> 
 			append(&event.args, arg)
 		}
 	}
+	if len(event.args) > 0 {
+		event.args[len(event.args) - 1].is_last = true
+	}
 	return event
 }
 
@@ -148,8 +154,12 @@ process_request :: proc(
 			append(&request.args, arg)
 		}
 	}
+	if len(request.args) > 0 {
+		request.args[len(request.args) - 1].is_last = true
+	}
 	request.num_new_ids = num_new_ids
 
+	// NOTE: The following is still code pulled from libwayland, should be cleaned up
 	// Compute return type string
 	if request.num_new_ids > 1 {
 		fmt.println("Not generating stub for {request.name}. new_ids > 1")
@@ -157,11 +167,13 @@ process_request :: proc(
 	}
 	ret: ^Arg = nil
 	ret_string: string = ""
+	args_string: [dynamic]string
 
 	// Find return argument
 	for &arg in request.args {
 		if arg.type == "new_id" {
 			ret = &arg
+			ret.is_new_id = true
 			break
 		}
 	}
@@ -174,8 +186,41 @@ process_request :: proc(
 	} else {
 		ret_string = fmt.tprintf("^%s", ret.interface)
 	}
+	for &arg in request.args {
+		if arg.type == "new_id" && arg.interface == "" {
+			append(&args_string, fmt.tprintf("interface: ^wl_interface, version: c.uint32_t"))
+			continue
+		} else if arg.type == "new_id" {
+			continue
+		} else if arg._enum != "" {
+			// Deal with enums from other interfaces
+			// Base case it the interface itself and the value from the "enum" field
+			enum_name := arg._enum
+			interface_name := interface.name
+
+			// Otherwise it will come in the format <interface>.<enum>
+			if strings.contains(arg._enum, ".") {
+				interface_name = strings.split(arg._enum, ".")[0]
+				enum_name = strings.split(arg._enum, ".")[1]
+			}
+
+			// FOR NOW IGNORE THE ABOVE SINCE TYPING THE ENUMS IS A MESS
+			append(
+				&args_string,
+				fmt.tprintf(
+					"%s : c.uint32_t",
+					arg.name,
+					// fmt.tprintf("%s_%s", interface_name, enum_name),
+				),
+			)
+			continue
+		} else {
+			append(&args_string, fmt.tprintf("%s : %s", arg.name, emit_type(arg)))
+		}
+	}
 
 	request.return_string = ret_string
+	request.args_string = strings.join(args_string[:], ",")
 
 	return request
 }
@@ -254,62 +299,6 @@ emit_interface_code :: proc(out: os.Handle, interface: Interface) {
 }
 
 emit_create_func :: proc(out: os.Handle, interface: Interface) {
-	pascal_name := strings.to_pascal_case(interface.name)
-	fmt.fprintf(
-		out,
-		"create_%s :: proc \"contextless\" (proxy: ^wl_proxy) -> ^%s {{\n",
-		interface.name,
-		pascal_name,
-	)
-	fmt.fprintf(out, "context = runtime.default_context()\n")
-	fmt.fprintf(out, "listener = wl_registry_listener {{\n")
-
-	// Generate listener code based on interface event
-	for event in interface.events {
-		event_pascal_name := strings.to_pascal_case(event.name)
-		// Start proc definition
-		fmt.fprintf(out, "\t%s = proc \"c\" (\n", event.name)
-
-		// Add default arg of user data and interface pointer
-		fmt.fprintf(out, "\t\tdata: rawptr,\n")
-		fmt.fprintf(out, "\t\t%s: ^%s,\n", interface.name, interface.name)
-
-		// Add spec args
-		for arg in event.args {
-			if arg.type == "object" && arg.interface != "" {
-				fmt.fprintf(out, "\t\t%s: ^%s,\n", arg.name, arg.interface)
-			} else {
-				translated_type, ok := type_map[arg.type]
-				if !ok {
-					panic(
-						fmt.tprintf(
-							"Unsuported type: interface '%s', event '%s', arg_name %s, type '%s'",
-							interface.name,
-							event.name,
-							arg.name,
-							arg.type,
-						),
-					)
-				}
-				fmt.fprintf(out, "\t\t%s: %s,\n", arg.name, translated_type)
-			}
-		}
-		fmt.fprintf(out, "\t) \n")
-		fmt.fprintf(out, "{{\n")
-
-		fmt.fprintf(out, "context = runtime.default_context()\n")
-		fmt.fprintf(out, "queue.enqueue(&wh.queue,")
-		fmt.fprintf(out, "%s_%s {{\n", pascal_name, event_pascal_name)
-		for arg in event.args {
-			fmt.fprintf(out, "%s,\n", arg.name)
-		}
-		fmt.fprintf(out, "}},)\n\n")
-		fmt.fprintf(out, "}},\n\n")
-	}
-
-	// Close proc declaration
-	fmt.fprintf(out, "}}\n\n")
-
 	// registry_listener := wl_registry_listener {
 	// 	global = proc "c" (
 	// 		data: rawptr,
