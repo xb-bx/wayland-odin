@@ -4,7 +4,6 @@ WL_INTERFACE_{{ upper_case }} :: "{{name}}"
     using base: ^Wl_Base_Interface,
 
     {{#requests}}
-
     {{name}} : proc "c" (
         proxy: ^wl_proxy,
         {{args_string}}
@@ -12,9 +11,9 @@ WL_INTERFACE_{{ upper_case }} :: "{{name}}"
     {{/requests}}
 }
 
-create_{{name}} :: proc "contextless" (proxy: ^Wl_Proxy) -> ^{{pascal_name}} {
+create_{{name}} :: proc "contextless" (proxy: ^wl_proxy) -> ^{{pascal_name}} {
     context = runtime.default_context()
-    listener = {{name}}_listener {
+    listener := {{name}}_listener {
         {{#events}}
         {{name}} = proc "c" (
             data: rawptr,
@@ -29,16 +28,28 @@ create_{{name}} :: proc "contextless" (proxy: ^Wl_Proxy) -> ^{{pascal_name}} {
         },
         {{/events}}
     }
-	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
 
+    {{#requests}}
+    {{name}} := proc "c" (
+        proxy: ^wl_proxy,
+        {{args_string}}
+    ) {{#return_string}}->{{return_string}}{{/return_string}} {
+        {{{ proc_body }}}
+    }
+    {{/requests}}
+
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
     
     res := new({{pascal_name}})
     res.proxy = proxy
     res.interface = &{{name}}_interface
 
+
     {{#requests}}
-    res.{{name}} = {{interface_name}}_{{name}}
+    res.{{name}} = {{name}}
     {{/requests}}
+    return res
 }   
 
 

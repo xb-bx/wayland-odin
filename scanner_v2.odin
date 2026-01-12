@@ -28,13 +28,15 @@ Event :: struct {
 }
 
 Request :: struct {
-	name:          string,
-	args:          [dynamic]Arg,
-	num_new_ids:   int,
-	opcode:        int,
-	type:          string,
-	return_string: string,
-	args_string:   string,
+	name:           string,
+	args:           [dynamic]Arg,
+	num_new_ids:    int,
+	opcode:         int,
+	type:           string,
+	interface_name: string,
+	return_string:  string,
+	args_string:    string,
+	proc_body:      string,
 }
 
 Enum :: struct {
@@ -122,9 +124,10 @@ process_request :: proc(
 	request_type, _ := xml.find_attribute_val_by_key(doc, index, "type")
 	el := doc.elements[index]
 	request := Request {
-		name   = request_name,
-		opcode = opcode,
-		type   = request_type,
+		name           = request_name,
+		opcode         = opcode,
+		type           = request_type,
+		interface_name = interface.name,
 	}
 
 	num_new_ids := 0
@@ -159,7 +162,7 @@ process_request :: proc(
 	}
 	request.num_new_ids = num_new_ids
 
-	// NOTE: The following is still code pulled from libwayland, should be cleaned up
+	// NOTE: The following is still code pulled and/or inspired from libwayland, should be cleaned up
 	// Compute return type string
 	if request.num_new_ids > 1 {
 		fmt.println("Not generating stub for {request.name}. new_ids > 1")
@@ -222,6 +225,68 @@ process_request :: proc(
 	request.return_string = ret_string
 	request.args_string = strings.join(args_string[:], ",")
 
+	// Calculate procedure body
+	sb := strings.builder_make()
+	if ret != nil {
+		strings.write_string(&sb, fmt.tprintf("\t%s: ^wl_proxy\n\t%s = ", ret.name, ret.name))
+	}
+
+	strings.write_string(
+		&sb,
+		fmt.tprintf(`proxy_marshal_flags(
+                proxy,
+		        %d`, request.opcode),
+	)
+
+	if ret != nil {
+		if ret.interface != "" {
+			//         /* Normal factory case, an arg has type="new_id" and
+			//          * an interface is provided */
+			fmt.sbprintf(&sb, ", &%s_interface", ret.interface)
+		} else {
+			//         /* an arg has type ="new_id" but interface is not
+			//          * provided, such as in wl_registry.bind */
+			strings.write_string(&sb, fmt.tprintf(", interface"))
+		}
+	} else {
+		//     /* No args have type="new_id" */
+		strings.write_string(&sb, fmt.tprintf(", nil"))
+	}
+
+	if ret != nil && ret.interface == "" {
+		strings.write_string(&sb, fmt.tprintf(", version"))
+	} else {
+		strings.write_string(&sb, fmt.tprintf(", proxy_get_version(proxy)"))
+	}
+	strings.write_string(
+		&sb,
+		fmt.tprintf(", %s", request.type == "destructor" ? "WL_MARSHAL_FLAG_DESTROY" : "0"),
+	)
+
+	for arg in request.args {
+		if (arg.type == "new_id") {
+			if (arg.interface == "") {
+				strings.write_string(&sb, fmt.tprintf(", interface.name, version"))
+			}
+			strings.write_string(&sb, fmt.tprintf(", nil"))
+		} else {
+			strings.write_string(&sb, fmt.tprintf(", %s", arg.name))
+		}
+	}
+
+	strings.write_string(&sb, fmt.tprintf(");\n\n"))
+
+
+	if (ret != nil && ret.interface == "") {
+		strings.write_string(&sb, fmt.tprintf("\n\treturn cast(rawptr)%s;\n", ret.name))
+	} else if (ret != nil) {
+		strings.write_string(
+			&sb,
+			fmt.tprintf("\n\treturn cast(^%s)%s;\n", ret.interface, ret.name),
+		)
+	}
+
+	request.proc_body = strings.to_string(sb)
 	return request
 }
 
@@ -785,8 +850,10 @@ main :: proc() {
 
 	interfaces: [dynamic]Interface
 
-	fmt.fprintln(out, "package wayland\n")
-	fmt.fprintln(out, "import \"core:c\"\n")
+	fmt.fprintln(out, "package wayland")
+	fmt.fprintln(out, "import \"core:c\"")
+	fmt.fprintln(out, "import \"base:runtime\"")
+	fmt.fprintln(out, "import \"core:container/queue\"\n")
 
 	doc, err := xml.load_from_file(cfg.input_path)
 	if err != nil {
@@ -796,8 +863,12 @@ main :: proc() {
 	// Parse
 	for el in doc.elements {
 		if (el.ident == "interface") {
-			append(&interfaces, process_interface(doc, el))
-		}
+			for attr in el.attribs {
+				if attr.key == "name" {
+					if attr.val == "wl_display" do continue // DO NOT PROCESS wl_display
+					append(&interfaces, process_interface(doc, el))
+				}
+			}}
 	}
 
 	// Emit code
