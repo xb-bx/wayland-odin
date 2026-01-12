@@ -8,8 +8,8 @@ import wl "wayland"
 
 
 main :: proc() {
-	wh := wl.init()
-	fmt.println(wh)
-	// wl.bind_interfaces({"wl_compositor"})
-	// wl.roundtrip()
+	wl.init()
+	wl.bind_interfaces({"wl_compositor"})
+	// wl.roundtrip(&wh)
+	wl.poll()
 }
