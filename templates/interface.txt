@@ -1,0 +1,37 @@
+WL_INTERFACE_{{ upper_case }} :: "{{name}}"
+
+{{pascal_name}} :: struct {
+    using base: ^Wl_Base_Interface,
+
+    {{#requests}}
+
+    {{name}} : proc "c" (
+        {{#args}}
+        {{name}}: {{emit_type}},
+        {{/args}}
+    ) {{#return_string}}->{{return_string}}{{/return_string}}
+
+    {{/requests}}
+}
+
+create_{{name}} :: proc "contextless" (proxy: ^Wl_Proxy) -> ^{{pascal_name}} {
+    context = runtime.default_context()
+    listener = {{name}}_listener {
+        {{#events}}
+        {{name}} = proc "c" (
+            data: rawptr,
+            {{interface_name}}: ^{{interface_name}},
+            {{#args}}
+            {{name}}: {{emit_type}},
+            {{/args}}
+        ) {
+            // Send message to the queue
+            context = runtime.default_context()
+            queue.enqueue(&wh.queue, {{struct_name}} {})
+
+        },
+        {{/events}}
+    }
+}   
+
+
