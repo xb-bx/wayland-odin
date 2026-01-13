@@ -1,0 +1,6 @@
+WlEvent :: union {
+{{#items}}
+{{struct_name}}, 
+{{/items}}
+}
+

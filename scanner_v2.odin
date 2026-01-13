@@ -65,6 +65,8 @@ type_map := map[string]string {
 	"array"  = "^wl_array",
 }
 
+global_events: [dynamic]Event
+
 emit_type :: proc(arg: Arg) -> string {
 	if arg.type == "object" {
 		return arg.interface == "" ? "rawptr" : fmt.tprintf("^%s", arg.interface)
@@ -331,7 +333,9 @@ process_interface :: proc(doc: ^xml.Document, el: xml.Element) -> Interface {
 	for val in el.value {
 		el := doc.elements[val.(u32)]
 		if el.ident == "event" {
-			append(&interface.events, process_event(doc, &interface, val.(u32)))
+			event := process_event(doc, &interface, val.(u32))
+			append(&interface.events, event)
+			append(&global_events, event) // Add a copy to the global event list
 		}
 		if el.ident == "request" {
 			append(&interface.requests, process_request(doc, &interface, val.(u32), opcode))
@@ -363,72 +367,20 @@ emit_interface_code :: proc(out: os.Handle, interface: Interface) {
 	// emit_enums(out, interface)
 }
 
-emit_create_func :: proc(out: os.Handle, interface: Interface) {
-	// registry_listener := wl_registry_listener {
-	// 	global = proc "c" (
-	// 		data: rawptr,
-	// 		registry: ^wl_registry,
-	// 		name: c.uint32_t,
-	// 		interface: cstring,
-	// 		version: c.uint32_t,
-	// 	) {
-	// 		context = runtime.default_context()
-	// 		queue.enqueue(
-	// 			&wh.queue,
-	// 			Wl_Registry_Global {
-	// 				data,
-	// 				registry,
-	// 				name,
-	// 				strings.clone_from_cstring(interface),
-	// 				version,
-	// 			},
-	// 		)
-	// 	},
-	// 	global_remove = proc "c" (data: rawptr, registry: ^wl_registry, name: c.uint32_t) {
-	// 		context = runtime.default_context()
-	// 		queue.enqueue(&wh.queue, Wl_Registry_Global_Remove{data, registry, name})
-	// 	},
-	// }
+emit_events_union :: proc(out: os.Handle) {
+	data: struct {
+		items: []Event,
+	} = {
+		items = global_events[:],
+	}
+	template :=
+		os.read_entire_file_from_filename("templates/events.txt") or_else panic(
+			"template does not exist",
+		)
 
-	// wl_registry_bind :: proc "c" (
-	// 	registry: ^Wl_Registry,
-	// 	name: c.uint32_t,
-	// 	interface: ^wl_interface,
-	// 	version: c.uint32_t,
-	// ) -> rawptr {
-	// 	id: ^wl_proxy
-	// 	id = proxy_marshal_flags(
-	// 		registry.proxy,
-	// 		0,
-	// 		interface,
-	// 		version,
-	// 		0,
-	// 		name,
-	// 		interface.name,
-	// 		version,
-	// 		nil,
-	// 	)
-
-
-	// 	return cast(rawptr)id
-	// }
-
-
-	// wl_registry_destroy :: proc "c" (wl_registry: ^wl_registry) {
-	// 	proxy_destroy(cast(^wl_proxy)wl_registry)
-	// }
-
-	// proxy_add_listener(_wl_registry, cast(^Implementation)&registry_listener, nil)
-	// roundtrip()
-
-	// res := new(Wl_Registry)
-	// res.proxy = _wl_registry
-	// res.interface = &wl_registry_interface
-	// res.bind = wl_registry_bind
-	// res.destroy = wl_registry_destroy
-
-	// return res
-	fmt.fprintf(out, "}}\n")
+	result, _ := mustache.render(string(template), data)
+	fmt.println(result)
+	fmt.fprint(out, result)
 }
 emit_enums :: proc(out: os.Handle, interface: Interface) {
 	for _enum in interface.enums {
@@ -863,18 +815,21 @@ main :: proc() {
 	// Parse
 	for el in doc.elements {
 		if (el.ident == "interface") {
-			for attr in el.attribs {
-				if attr.key == "name" {
-					if attr.val == "wl_display" do continue // DO NOT PROCESS wl_display
-					append(&interfaces, process_interface(doc, el))
-				}
-			}}
+			// for attr in el.attribs {
+			// 	if attr.key == "name" {
+			// 		if attr.val == "wl_display" do continue // DO NOT PROCESS wl_display
+			// 		append(&interfaces, process_interface(doc, el))
+			// 	}
+			// }
+			append(&interfaces, process_interface(doc, el))
+		}
 	}
 
 	// Emit code
 	for i in interfaces {
 		emit_interface_code(out, i)
 	}
+	emit_events_union(out)
 
 	// Close file
 	os.close(out)

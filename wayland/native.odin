@@ -8,9 +8,9 @@ import "core:strings"
 
 InterfaceMap :: map[string]^Wl_Base_Interface
 
-Wl_Handle :: struct {
+WlHandle :: struct {
 	display:    Wl_Display,
-	queue:      queue.Queue(Wl_Event),
+	queue:      queue.Queue(WlEvent),
 	interfaces: InterfaceMap,
 }
 
@@ -26,7 +26,7 @@ Wl_Base_Interface :: struct {
 
 
 @(private)
-wh: Wl_Handle = {}
+wh: WlHandle = {}
 
 init :: proc() {
 	d := display_connect(nil)

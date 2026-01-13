@@ -3,6 +3,87 @@ import "base:runtime"
 import "core:c"
 import "core:container/queue"
 
+WL_INTERFACE_WL_DISPLAY :: "wl_display"
+
+WlDisplay :: struct {
+	using base:   ^Wl_Base_Interface,
+	sync:         proc "c" (proxy: ^wl_proxy) -> ^wl_callback,
+	get_registry: proc "c" (proxy: ^wl_proxy) -> ^wl_registry,
+}
+
+create_wl_display :: proc "contextless" (proxy: ^wl_proxy) -> ^WlDisplay {
+	context = runtime.default_context()
+	listener := wl_display_listener {
+		error = proc "c" (
+			data: rawptr,
+			wl_display: ^wl_display,
+			object_id: rawptr,
+			code: c.uint32_t,
+			message: cstring,
+		) {
+			// Send message to the queue
+			context = runtime.default_context()
+			queue.enqueue(&wh.queue, WlDisplayError{})
+		},
+		delete_id = proc "c" (data: rawptr, wl_display: ^wl_display, id: c.uint32_t) {
+			// Send message to the queue
+			context = runtime.default_context()
+			queue.enqueue(&wh.queue, WlDisplayDeleteId{})
+		},
+	}
+
+	sync := proc "c" (proxy: ^wl_proxy) -> ^wl_callback {
+		callback: ^wl_proxy
+		callback = proxy_marshal_flags(
+			proxy,
+			0,
+			&wl_callback_interface,
+			proxy_get_version(proxy),
+			0,
+			nil,
+		)
+
+
+		return cast(^wl_callback)callback
+
+	}
+	get_registry := proc "c" (proxy: ^wl_proxy) -> ^wl_registry {
+		registry: ^wl_proxy
+		registry = proxy_marshal_flags(
+			proxy,
+			1,
+			&wl_registry_interface,
+			proxy_get_version(proxy),
+			0,
+			nil,
+		)
+
+
+		return cast(^wl_registry)registry
+
+	}
+
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+	roundtrip()
+	res := new(WlDisplay)
+	res.proxy = proxy
+	res.interface = &wl_display_interface
+
+
+	res.sync = sync
+	res.get_registry = get_registry
+	return res
+}
+
+WlDisplayError :: struct {
+	object_id: rawptr,
+	code:      c.uint32_t,
+	message:   cstring,
+}
+WlDisplayDeleteId :: struct {
+	id: c.uint32_t,
+}
+
 WL_INTERFACE_WL_REGISTRY :: "wl_registry"
 
 WlRegistry :: struct {
@@ -71,6 +152,14 @@ create_wl_registry :: proc "contextless" (proxy: ^wl_proxy) -> ^WlRegistry {
 	return res
 }
 
+WlRegistryGlobal :: struct {
+	name:      c.uint32_t,
+	interface: cstring,
+	version:   c.uint32_t,
+}
+WlRegistryGlobalRemove :: struct {
+	name: c.uint32_t,
+}
 
 WL_INTERFACE_WL_CALLBACK :: "wl_callback"
 
@@ -99,6 +188,9 @@ create_wl_callback :: proc "contextless" (proxy: ^wl_proxy) -> ^WlCallback {
 	return res
 }
 
+WlCallbackDone :: struct {
+	callback_data: c.uint32_t,
+}
 
 WL_INTERFACE_WL_COMPOSITOR :: "wl_compositor"
 
@@ -260,6 +352,9 @@ create_wl_shm :: proc "contextless" (proxy: ^wl_proxy) -> ^WlShm {
 	return res
 }
 
+WlShmFormat :: struct {
+	format: c.uint32_t,
+}
 
 WL_INTERFACE_WL_BUFFER :: "wl_buffer"
 
@@ -295,6 +390,7 @@ create_wl_buffer :: proc "contextless" (proxy: ^wl_proxy) -> ^WlBuffer {
 	return res
 }
 
+WlBufferRelease :: struct {}
 
 WL_INTERFACE_WL_DATA_OFFER :: "wl_data_offer"
 
@@ -388,6 +484,15 @@ create_wl_data_offer :: proc "contextless" (proxy: ^wl_proxy) -> ^WlDataOffer {
 	return res
 }
 
+WlDataOfferOffer :: struct {
+	mime_type: cstring,
+}
+WlDataOfferSourceActions :: struct {
+	source_actions: c.uint32_t,
+}
+WlDataOfferAction :: struct {
+	dnd_action: c.uint32_t,
+}
 
 WL_INTERFACE_WL_DATA_SOURCE :: "wl_data_source"
 
@@ -467,6 +572,19 @@ create_wl_data_source :: proc "contextless" (proxy: ^wl_proxy) -> ^WlDataSource 
 	return res
 }
 
+WlDataSourceTarget :: struct {
+	mime_type: cstring,
+}
+WlDataSourceSend :: struct {
+	mime_type: cstring,
+	fd:        c.int32_t,
+}
+WlDataSourceCancelled :: struct {}
+WlDataSourceDndDropPerformed :: struct {}
+WlDataSourceDndFinished :: struct {}
+WlDataSourceAction :: struct {
+	dnd_action: c.uint32_t,
+}
 
 WL_INTERFACE_WL_DATA_DEVICE :: "wl_data_device"
 
@@ -577,6 +695,26 @@ create_wl_data_device :: proc "contextless" (proxy: ^wl_proxy) -> ^WlDataDevice 
 	return res
 }
 
+WlDataDeviceDataOffer :: struct {
+	id: c.uint32_t,
+}
+WlDataDeviceEnter :: struct {
+	serial:  c.uint32_t,
+	surface: ^wl_surface,
+	x:       wl_fixed_t,
+	y:       wl_fixed_t,
+	id:      ^wl_data_offer,
+}
+WlDataDeviceLeave :: struct {}
+WlDataDeviceMotion :: struct {
+	time: c.uint32_t,
+	x:    wl_fixed_t,
+	y:    wl_fixed_t,
+}
+WlDataDeviceDrop :: struct {}
+WlDataDeviceSelection :: struct {
+	id: ^wl_data_offer,
+}
 
 WL_INTERFACE_WL_DATA_DEVICE_MANAGER :: "wl_data_device_manager"
 
@@ -843,6 +981,15 @@ create_wl_shell_surface :: proc "contextless" (proxy: ^wl_proxy) -> ^WlShellSurf
 	return res
 }
 
+WlShellSurfacePing :: struct {
+	serial: c.uint32_t,
+}
+WlShellSurfaceConfigure :: struct {
+	edges:  c.uint32_t,
+	width:  c.int32_t,
+	height: c.int32_t,
+}
+WlShellSurfacePopupDone :: struct {}
 
 WL_INTERFACE_WL_SURFACE :: "wl_surface"
 
@@ -1010,6 +1157,18 @@ create_wl_surface :: proc "contextless" (proxy: ^wl_proxy) -> ^WlSurface {
 	return res
 }
 
+WlSurfaceEnter :: struct {
+	output: ^wl_output,
+}
+WlSurfaceLeave :: struct {
+	output: ^wl_output,
+}
+WlSurfacePreferredBufferScale :: struct {
+	factor: c.int32_t,
+}
+WlSurfacePreferredBufferTransform :: struct {
+	transform: c.uint32_t,
+}
 
 WL_INTERFACE_WL_SEAT :: "wl_seat"
 
@@ -1087,6 +1246,12 @@ create_wl_seat :: proc "contextless" (proxy: ^wl_proxy) -> ^WlSeat {
 	return res
 }
 
+WlSeatCapabilities :: struct {
+	capabilities: c.uint32_t,
+}
+WlSeatName :: struct {
+	name: cstring,
+}
 
 WL_INTERFACE_WL_POINTER :: "wl_pointer"
 
@@ -1252,6 +1417,52 @@ create_wl_pointer :: proc "contextless" (proxy: ^wl_proxy) -> ^WlPointer {
 	return res
 }
 
+WlPointerEnter :: struct {
+	serial:    c.uint32_t,
+	surface:   ^wl_surface,
+	surface_x: wl_fixed_t,
+	surface_y: wl_fixed_t,
+}
+WlPointerLeave :: struct {
+	serial:  c.uint32_t,
+	surface: ^wl_surface,
+}
+WlPointerMotion :: struct {
+	time:      c.uint32_t,
+	surface_x: wl_fixed_t,
+	surface_y: wl_fixed_t,
+}
+WlPointerButton :: struct {
+	serial: c.uint32_t,
+	time:   c.uint32_t,
+	button: c.uint32_t,
+	state:  c.uint32_t,
+}
+WlPointerAxis :: struct {
+	time:  c.uint32_t,
+	axis:  c.uint32_t,
+	value: wl_fixed_t,
+}
+WlPointerFrame :: struct {}
+WlPointerAxisSource :: struct {
+	axis_source: c.uint32_t,
+}
+WlPointerAxisStop :: struct {
+	time: c.uint32_t,
+	axis: c.uint32_t,
+}
+WlPointerAxisDiscrete :: struct {
+	axis:     c.uint32_t,
+	discrete: c.int32_t,
+}
+WlPointerAxisValue120 :: struct {
+	axis:     c.uint32_t,
+	value120: c.int32_t,
+}
+WlPointerAxisRelativeDirection :: struct {
+	axis:      c.uint32_t,
+	direction: c.uint32_t,
+}
 
 WL_INTERFACE_WL_KEYBOARD :: "wl_keyboard"
 
@@ -1349,6 +1560,37 @@ create_wl_keyboard :: proc "contextless" (proxy: ^wl_proxy) -> ^WlKeyboard {
 	return res
 }
 
+WlKeyboardKeymap :: struct {
+	format: c.uint32_t,
+	fd:     c.int32_t,
+	size:   c.uint32_t,
+}
+WlKeyboardEnter :: struct {
+	serial:  c.uint32_t,
+	surface: ^wl_surface,
+	keys:    ^wl_array,
+}
+WlKeyboardLeave :: struct {
+	serial:  c.uint32_t,
+	surface: ^wl_surface,
+}
+WlKeyboardKey :: struct {
+	serial: c.uint32_t,
+	time:   c.uint32_t,
+	key:    c.uint32_t,
+	state:  c.uint32_t,
+}
+WlKeyboardModifiers :: struct {
+	serial:         c.uint32_t,
+	mods_depressed: c.uint32_t,
+	mods_latched:   c.uint32_t,
+	mods_locked:    c.uint32_t,
+	group:          c.uint32_t,
+}
+WlKeyboardRepeatInfo :: struct {
+	rate:  c.int32_t,
+	delay: c.int32_t,
+}
 
 WL_INTERFACE_WL_TOUCH :: "wl_touch"
 
@@ -1447,6 +1689,36 @@ create_wl_touch :: proc "contextless" (proxy: ^wl_proxy) -> ^WlTouch {
 	return res
 }
 
+WlTouchDown :: struct {
+	serial:  c.uint32_t,
+	time:    c.uint32_t,
+	surface: ^wl_surface,
+	id:      c.int32_t,
+	x:       wl_fixed_t,
+	y:       wl_fixed_t,
+}
+WlTouchUp :: struct {
+	serial: c.uint32_t,
+	time:   c.uint32_t,
+	id:     c.int32_t,
+}
+WlTouchMotion :: struct {
+	time: c.uint32_t,
+	id:   c.int32_t,
+	x:    wl_fixed_t,
+	y:    wl_fixed_t,
+}
+WlTouchFrame :: struct {}
+WlTouchCancel :: struct {}
+WlTouchShape :: struct {
+	id:    c.int32_t,
+	major: wl_fixed_t,
+	minor: wl_fixed_t,
+}
+WlTouchOrientation :: struct {
+	id:          c.int32_t,
+	orientation: wl_fixed_t,
+}
 
 WL_INTERFACE_WL_OUTPUT :: "wl_output"
 
@@ -1525,6 +1797,32 @@ create_wl_output :: proc "contextless" (proxy: ^wl_proxy) -> ^WlOutput {
 	return res
 }
 
+WlOutputGeometry :: struct {
+	x:               c.int32_t,
+	y:               c.int32_t,
+	physical_width:  c.int32_t,
+	physical_height: c.int32_t,
+	subpixel:        c.int32_t,
+	make:            cstring,
+	model:           cstring,
+	transform:       c.int32_t,
+}
+WlOutputMode :: struct {
+	flags:   c.uint32_t,
+	width:   c.int32_t,
+	height:  c.int32_t,
+	refresh: c.int32_t,
+}
+WlOutputDone :: struct {}
+WlOutputScale :: struct {
+	factor: c.int32_t,
+}
+WlOutputName :: struct {
+	name: cstring,
+}
+WlOutputDescription :: struct {
+	description: cstring,
+}
 
 WL_INTERFACE_WL_REGION :: "wl_region"
 
@@ -1710,4 +2008,69 @@ create_wl_subsurface :: proc "contextless" (proxy: ^wl_proxy) -> ^WlSubsurface {
 	res.set_sync = set_sync
 	res.set_desync = set_desync
 	return res
+}
+
+
+WlEvent :: union {
+	WlDisplayError,
+	WlDisplayDeleteId,
+	WlRegistryGlobal,
+	WlRegistryGlobalRemove,
+	WlCallbackDone,
+	WlShmFormat,
+	WlBufferRelease,
+	WlDataOfferOffer,
+	WlDataOfferSourceActions,
+	WlDataOfferAction,
+	WlDataSourceTarget,
+	WlDataSourceSend,
+	WlDataSourceCancelled,
+	WlDataSourceDndDropPerformed,
+	WlDataSourceDndFinished,
+	WlDataSourceAction,
+	WlDataDeviceDataOffer,
+	WlDataDeviceEnter,
+	WlDataDeviceLeave,
+	WlDataDeviceMotion,
+	WlDataDeviceDrop,
+	WlDataDeviceSelection,
+	WlShellSurfacePing,
+	WlShellSurfaceConfigure,
+	WlShellSurfacePopupDone,
+	WlSurfaceEnter,
+	WlSurfaceLeave,
+	WlSurfacePreferredBufferScale,
+	WlSurfacePreferredBufferTransform,
+	WlSeatCapabilities,
+	WlSeatName,
+	WlPointerEnter,
+	WlPointerLeave,
+	WlPointerMotion,
+	WlPointerButton,
+	WlPointerAxis,
+	WlPointerFrame,
+	WlPointerAxisSource,
+	WlPointerAxisStop,
+	WlPointerAxisDiscrete,
+	WlPointerAxisValue120,
+	WlPointerAxisRelativeDirection,
+	WlKeyboardKeymap,
+	WlKeyboardEnter,
+	WlKeyboardLeave,
+	WlKeyboardKey,
+	WlKeyboardModifiers,
+	WlKeyboardRepeatInfo,
+	WlTouchDown,
+	WlTouchUp,
+	WlTouchMotion,
+	WlTouchFrame,
+	WlTouchCancel,
+	WlTouchShape,
+	WlTouchOrientation,
+	WlOutputGeometry,
+	WlOutputMode,
+	WlOutputDone,
+	WlOutputScale,
+	WlOutputName,
+	WlOutputDescription,
 }

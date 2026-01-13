@@ -52,4 +52,11 @@ create_{{name}} :: proc "contextless" (proxy: ^wl_proxy) -> ^{{pascal_name}} {
     return res
 }   
 
+{{#events}}
+{{struct_name}} :: struct {
+    {{#args}}
+    {{name}}: {{emit_type}},
+    {{/args}}
+}
+{{/events}}
 
