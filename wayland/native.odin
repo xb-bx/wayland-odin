@@ -9,15 +9,11 @@ import "core:strings"
 InterfaceMap :: map[string]^Wl_Base_Interface
 
 WlHandle :: struct {
-	display:    Wl_Display,
+	display:    ^WlDisplay,
 	queue:      queue.Queue(WlEvent),
 	interfaces: InterfaceMap,
 }
 
-Wl_Event :: union {
-	Wl_Registry_Global,
-	Wl_Registry_Global_Remove,
-}
 
 Wl_Base_Interface :: struct {
 	proxy:     ^wl_proxy,
@@ -32,18 +28,13 @@ init :: proc() {
 	d := display_connect(nil)
 	fmt.printf("original display pointer %p\n", d)
 	// Manualy configure a display interface object
-	wh.display = Wl_Display {
-		proxy        = cast(^wl_proxy)d,
-		interface    = &wl_display_interface,
-		get_registry = _wl_display_get_registry,
-	}
-
+	wh.display = create_wl_display(cast(^wl_proxy)d)
 	wh.interfaces[WL_INTERFACE_WL_REGISTRY] = wh.display->get_registry()
 }
 
-poll :: proc() -> []Wl_Event {
+poll :: proc() -> []WlEvent {
 	roundtrip()
-	result: [dynamic]Wl_Event
+	result: [dynamic]WlEvent
 
 	for {
 		event, ok := queue.pop_front_safe(&wh.queue)
@@ -67,10 +58,10 @@ interface :: proc(name: string, $T: typeid) -> ^T {
 }
 
 bind_interfaces :: proc(interface_names: []string) {
-	registry := cast(^Wl_Registry)(wh.interfaces["wl_registry"])
+	registry := cast(^WlRegistry)(wh.interfaces["wl_registry"])
 	for event in poll() {
 		#partial switch e in event {
-		case Wl_Registry_Global:
+		case WlRegistryGlobal:
 			for iname in interface_names {
 				if string(e.interface) == iname {
 					proxy := cast(^wl_proxy)registry->bind(

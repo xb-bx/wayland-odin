@@ -45,13 +45,14 @@ Enum :: struct {
 }
 
 Interface :: struct {
-	name:        string,
-	events:      [dynamic]Event,
-	requests:    [dynamic]Request,
-	version:     string,
-	enums:       [dynamic]Enum,
-	pascal_name: string,
-	upper_case:  string,
+	name:         string,
+	events:       [dynamic]Event,
+	requests:     [dynamic]Request,
+	version:      string,
+	enums:        [dynamic]Enum,
+	pascal_name:  string,
+	upper_case:   string,
+	add_listener: bool,
 }
 
 type_map := map[string]string {
@@ -189,8 +190,10 @@ process_request :: proc(
 	} else if ret != nil && ret.interface == "" {
 		ret_string = "rawptr"
 	} else {
-		ret_string = fmt.tprintf("^%s", ret.interface)
+		ret_string = fmt.tprintf("^%s", strings.to_pascal_case(ret.interface))
 	}
+
+	// Calculate args for template
 	for &arg in request.args {
 		if arg.type == "new_id" && arg.interface == "" {
 			append(&args_string, fmt.tprintf("interface: ^wl_interface, version: c.uint32_t"))
@@ -224,20 +227,21 @@ process_request :: proc(
 		}
 	}
 
-	request.return_string = ret_string
-	request.args_string = strings.join(args_string[:], ",")
 
 	// Calculate procedure body
 	sb := strings.builder_make()
 	if ret != nil {
-		strings.write_string(&sb, fmt.tprintf("\t%s: ^wl_proxy\n\t%s = ", ret.name, ret.name))
+		fmt.sbprintf(&sb, "\t%s: ^wl_proxy\n\t%s = ", ret.name, ret.name)
 	}
 
 	strings.write_string(
 		&sb,
-		fmt.tprintf(`proxy_marshal_flags(
-                proxy,
-		        %d`, request.opcode),
+		fmt.tprintf(
+			`proxy_marshal_flags(
+                self.proxy,
+		        %d`,
+			request.opcode, //NOTE: maybe emit enums and use them here
+		),
 	)
 
 	if ret != nil {
@@ -258,7 +262,7 @@ process_request :: proc(
 	if ret != nil && ret.interface == "" {
 		strings.write_string(&sb, fmt.tprintf(", version"))
 	} else {
-		strings.write_string(&sb, fmt.tprintf(", proxy_get_version(proxy)"))
+		strings.write_string(&sb, fmt.tprintf(", proxy_get_version(self.proxy)"))
 	}
 	strings.write_string(
 		&sb,
@@ -278,16 +282,17 @@ process_request :: proc(
 
 	strings.write_string(&sb, fmt.tprintf(");\n\n"))
 
-
 	if (ret != nil && ret.interface == "") {
 		strings.write_string(&sb, fmt.tprintf("\n\treturn cast(rawptr)%s;\n", ret.name))
 	} else if (ret != nil) {
 		strings.write_string(
 			&sb,
-			fmt.tprintf("\n\treturn cast(^%s)%s;\n", ret.interface, ret.name),
+			fmt.tprintf("\n\treturn create_%s(%s)\n", ret.interface, ret.name),
 		)
 	}
 
+	request.return_string = ret_string
+	request.args_string = strings.join(args_string[:], ",")
 	request.proc_body = strings.to_string(sb)
 	return request
 }
@@ -320,6 +325,7 @@ process_interface :: proc(doc: ^xml.Document, el: xml.Element) -> Interface {
 	for attr in el.attribs {
 		if attr.key == "name" {
 			interface.name = attr.val
+			if interface.name == "wl_display" do interface.add_listener = false
 			interface.pascal_name = strings.to_pascal_case(interface.name)
 			interface.upper_case = strings.to_upper(interface.name)
 		}
