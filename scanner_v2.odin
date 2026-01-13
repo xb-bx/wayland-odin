@@ -325,7 +325,7 @@ process_interface :: proc(doc: ^xml.Document, el: xml.Element) -> Interface {
 	for attr in el.attribs {
 		if attr.key == "name" {
 			interface.name = attr.val
-			if interface.name == "wl_display" do interface.add_listener = false
+			if interface.name != "wl_display" do interface.add_listener = true
 			interface.pascal_name = strings.to_pascal_case(interface.name)
 			interface.upper_case = strings.to_upper(interface.name)
 		}

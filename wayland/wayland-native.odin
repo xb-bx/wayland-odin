@@ -139,6 +139,8 @@ create_wl_registry :: proc "contextless" (proxy: ^wl_proxy) -> ^WlRegistry {
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlRegistry)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -179,6 +181,8 @@ create_wl_callback :: proc "contextless" (proxy: ^wl_proxy) -> ^WlCallback {
     }
 
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlCallback)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -238,6 +242,8 @@ create_wl_compositor :: proc "contextless" (proxy: ^wl_proxy) -> ^WlCompositor {
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlCompositor)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -307,6 +313,8 @@ create_wl_shm_pool :: proc "contextless" (proxy: ^wl_proxy) -> ^WlShmPool {
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlShmPool)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -358,6 +366,8 @@ create_wl_shm :: proc "contextless" (proxy: ^wl_proxy) -> ^WlShm {
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlShm)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -406,6 +416,8 @@ create_wl_buffer :: proc "contextless" (proxy: ^wl_proxy) -> ^WlBuffer {
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlBuffer)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -528,6 +540,8 @@ create_wl_data_offer :: proc "contextless" (proxy: ^wl_proxy) -> ^WlDataOffer {
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlDataOffer)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -658,6 +672,8 @@ create_wl_data_source :: proc "contextless" (proxy: ^wl_proxy) -> ^WlDataSource 
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlDataSource)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -799,6 +815,8 @@ create_wl_data_device :: proc "contextless" (proxy: ^wl_proxy) -> ^WlDataDevice 
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlDataDevice)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -880,6 +898,8 @@ create_wl_data_device_manager :: proc "contextless" (proxy: ^wl_proxy) -> ^WlDat
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlDataDeviceManager)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -921,6 +941,8 @@ create_wl_shell :: proc "contextless" (proxy: ^wl_proxy) -> ^WlShell {
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlShell)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -1112,6 +1134,8 @@ create_wl_shell_surface :: proc "contextless" (proxy: ^wl_proxy) -> ^WlShellSurf
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlShellSurface)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -1347,6 +1371,8 @@ create_wl_surface :: proc "contextless" (proxy: ^wl_proxy) -> ^WlSurface {
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlSurface)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -1475,6 +1501,8 @@ create_wl_seat :: proc "contextless" (proxy: ^wl_proxy) -> ^WlSeat {
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlSeat)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -1648,6 +1676,8 @@ create_wl_pointer :: proc "contextless" (proxy: ^wl_proxy) -> ^WlPointer {
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlPointer)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -1800,6 +1830,8 @@ create_wl_keyboard :: proc "contextless" (proxy: ^wl_proxy) -> ^WlKeyboard {
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlKeyboard)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -1942,6 +1974,8 @@ create_wl_touch :: proc "contextless" (proxy: ^wl_proxy) -> ^WlTouch {
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlTouch)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -2074,6 +2108,8 @@ create_wl_output :: proc "contextless" (proxy: ^wl_proxy) -> ^WlOutput {
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlOutput)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -2166,6 +2202,8 @@ create_wl_region :: proc "contextless" (proxy: ^wl_proxy) -> ^WlRegion {
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlRegion)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -2222,6 +2260,8 @@ create_wl_subcompositor :: proc "contextless" (proxy: ^wl_proxy) -> ^WlSubcompos
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlSubcompositor)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
@@ -2330,6 +2370,8 @@ create_wl_subsurface :: proc "contextless" (proxy: ^wl_proxy) -> ^WlSubsurface {
 
     }
 
+	proxy_add_listener(proxy, cast(^Implementation)&listener, nil)
+    roundtrip()
         res := new(WlSubsurface)
     res.base = new(Wl_Base_Interface)
     res.proxy = proxy
