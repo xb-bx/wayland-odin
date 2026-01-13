@@ -9,6 +9,9 @@ import wl "wayland"
 
 main :: proc() {
 	wl.init()
+	for event in wl.poll() {
+		fmt.println(event)
+	}
 	// wl.bind_interfaces({"wl_compositor"})
 
 	// compositor := wl.interface("wl_compositor", wl.Wl_Compositor)

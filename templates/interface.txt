@@ -24,7 +24,11 @@ create_{{name}} :: proc "contextless" (proxy: ^wl_proxy) -> ^{{pascal_name}} {
         ) {
             // Send message to the queue
             context = runtime.default_context()
-            queue.enqueue(&wh.queue, {{struct_name}} {})
+            queue.enqueue(&wh.queue, {{struct_name}} {
+            {{#args}}
+            {{name}},
+            {{/args}}
+            })
         },
         {{/events}}
     }
