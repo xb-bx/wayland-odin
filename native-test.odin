@@ -15,10 +15,10 @@ main :: proc() {
 	// 	fmt.println(event)
 	// }
 
-	// compositor := wl.interface("wl_compositor", wl.Wl_Compositor)
+	compositor := wl.interface("wl_compositor", wl.WlCompositor)
 
-	// fmt.println(compositor)
-	// fmt.printf("%p\n", compositor->create_surface())
+	fmt.println(compositor)
+	fmt.printf("%p\n", compositor->create_surface())
 
 
 	// wl.bind_interfaces({"wl_compositor", "xdg_wm_base", "wl_seat"})

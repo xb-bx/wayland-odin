@@ -211,7 +211,7 @@ WlCompositor :: struct {
 	create_region:  proc "c" (self: ^WlCompositor) -> ^WlRegion,
 }
 
-create_wl_compositor :: proc "contextless" (proxy: ^wl_proxy) -> ^WlCompositor {
+create_wl_compositor :: proc "contextless" (proxy: ^wl_proxy) -> WlCompositor {
 	context = runtime.default_context()
 	listener := wl_compositor_listener{}
 
@@ -255,7 +255,7 @@ create_wl_compositor :: proc "contextless" (proxy: ^wl_proxy) -> ^WlCompositor {
 
 	res.create_surface = create_surface
 	res.create_region = create_region
-	return res
+	return res^
 }
 
 

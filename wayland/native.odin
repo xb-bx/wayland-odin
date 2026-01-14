@@ -22,6 +22,7 @@ Wl_Base_Interface :: struct {
 
 WlInterface :: union {
 	WlRegistry,
+	WlCompositor,
 }
 
 
@@ -57,10 +58,10 @@ roundtrip :: proc "contextless" () {
 }
 
 
-interface :: proc(name: string, $T: typeid) -> ^T {
+interface :: proc(name: string, $T: typeid) -> T {
 	iface := wh.interfaces[name]
 
-	return cast(^T)iface
+	return iface.(T)
 }
 
 bind_interfaces :: proc(interface_names: []string) {
@@ -86,7 +87,7 @@ bind_interfaces :: proc(interface_names: []string) {
 					// )
 					_ = proxy
 
-					// wh.interfaces[WL_INTERFACE_WL_COMPOSITOR] = create_wl_compositor(proxy)
+					wh.interfaces[WL_INTERFACE_WL_COMPOSITOR] = create_wl_compositor(proxy)
 				}
 			}
 		}
