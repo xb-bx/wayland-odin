@@ -6,7 +6,7 @@ import "core:container/queue"
 import "core:fmt"
 import "core:strings"
 
-InterfaceMap :: map[string]^Wl_Base_Interface
+InterfaceMap :: map[string]WlInterface
 
 WlHandle :: struct {
 	display:    ^WlDisplay,
@@ -20,6 +20,10 @@ Wl_Base_Interface :: struct {
 	interface: ^wl_interface,
 }
 
+WlInterface :: union {
+	WlRegistry,
+}
+
 
 @(private)
 wh: WlHandle = {}
@@ -30,6 +34,8 @@ init :: proc() {
 	// Manualy configure a display interface object
 	wh.display = create_wl_display(cast(^wl_proxy)d)
 	wh.interfaces[WL_INTERFACE_WL_REGISTRY] = wh.display->get_registry()
+	tmp := (wh.interfaces[WL_INTERFACE_WL_REGISTRY]).(WlRegistry)
+	fmt.println(tmp.proxy)
 }
 
 poll :: proc() -> []WlEvent {
@@ -58,18 +64,29 @@ interface :: proc(name: string, $T: typeid) -> ^T {
 }
 
 bind_interfaces :: proc(interface_names: []string) {
-	registry := cast(^WlRegistry)(wh.interfaces["wl_registry"])
+	registry := (wh.interfaces["wl_registry"]).(WlRegistry)
 	for event in poll() {
 		#partial switch e in event {
 		case WlRegistryGlobal:
 			for iname in interface_names {
+				fmt.println(e.interface)
 				if string(e.interface) == iname {
 					proxy := cast(^wl_proxy)registry->bind(
 						e.name,
 						&wl_compositor_interface,
 						e.version,
 					)
-					wh.interfaces[WL_INTERFACE_WL_COMPOSITOR] = create_wl_compositor(proxy)
+					fmt.println("not working", registry.proxy)
+					fmt.println("working", e.registry)
+					// proxy := wl_registry_bind(
+					// 	cast(^wl_registry)e.registry,
+					// 	e.name,
+					// 	&wl_compositor_interface,
+					// 	e.version,
+					// )
+					_ = proxy
+
+					// wh.interfaces[WL_INTERFACE_WL_COMPOSITOR] = create_wl_compositor(proxy)
 				}
 			}
 		}

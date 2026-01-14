@@ -2,6 +2,7 @@ package wayland
 import "base:runtime"
 import "core:c"
 import "core:container/queue"
+import "core:fmt"
 import "core:strings"
 
 WL_INTERFACE_WL_DISPLAY :: "wl_display"
@@ -9,7 +10,7 @@ WL_INTERFACE_WL_DISPLAY :: "wl_display"
 WlDisplay :: struct {
 	using base:   ^Wl_Base_Interface,
 	sync:         proc "c" (self: ^WlDisplay) -> ^WlCallback,
-	get_registry: proc "c" (self: ^WlDisplay) -> ^WlRegistry,
+	get_registry: proc "c" (self: ^WlDisplay) -> WlRegistry,
 }
 
 create_wl_display :: proc "contextless" (proxy: ^wl_proxy) -> ^WlDisplay {
@@ -46,9 +47,10 @@ create_wl_display :: proc "contextless" (proxy: ^wl_proxy) -> ^WlDisplay {
 
 
 		return create_wl_callback(callback)
-
 	}
-	get_registry := proc "c" (self: ^WlDisplay) -> ^WlRegistry {
+
+	get_registry := proc "c" (self: ^WlDisplay) -> WlRegistry {
+		context = runtime.default_context()
 		registry: ^wl_proxy
 		registry = proxy_marshal_flags(
 			self.proxy,
@@ -59,9 +61,9 @@ create_wl_display :: proc "contextless" (proxy: ^wl_proxy) -> ^WlDisplay {
 			nil,
 		)
 
+		fmt.println("---------", registry)
 
 		return create_wl_registry(registry)
-
 	}
 
 	res := new(WlDisplay)
@@ -95,7 +97,7 @@ WlRegistry :: struct {
 	) -> rawptr,
 }
 
-create_wl_registry :: proc "contextless" (proxy: ^wl_proxy) -> ^WlRegistry {
+create_wl_registry :: proc "contextless" (proxy: ^wl_proxy) -> WlRegistry {
 	context = runtime.default_context()
 	listener := wl_registry_listener {
 		global = proc "c" (
@@ -109,7 +111,12 @@ create_wl_registry :: proc "contextless" (proxy: ^wl_proxy) -> ^WlRegistry {
 			context = runtime.default_context()
 			queue.enqueue(
 				&wh.queue,
-				WlRegistryGlobal{name, strings.clone_from_cstring(interface), version},
+				WlRegistryGlobal {
+					cast(^wl_proxy)wl_registry,
+					name,
+					strings.clone_from_cstring(interface),
+					version,
+				},
 			)
 		},
 		global_remove = proc "c" (data: rawptr, wl_registry: ^wl_registry, name: c.uint32_t) {
@@ -151,10 +158,12 @@ create_wl_registry :: proc "contextless" (proxy: ^wl_proxy) -> ^WlRegistry {
 	res.interface = &wl_registry_interface
 
 	res.bind = bind
-	return res
+	fmt.println("##########", res.base.proxy)
+	return res^
 }
 
 WlRegistryGlobal :: struct {
+	registry:  ^wl_proxy,
 	name:      c.uint32_t,
 	interface: string,
 	version:   c.uint32_t,
